@@ -15,6 +15,8 @@ export class Player {
 	points: number;
 	position: string;
 	gender: Gender;
+	gamesPlayed?: number;
+	wins?: number;
 
 	constructor(
 		id: number,

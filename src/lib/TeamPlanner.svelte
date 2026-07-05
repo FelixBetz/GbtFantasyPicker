@@ -8,13 +8,15 @@
 
 	type TeamPlannerProps = {
 		players: Player[];
+		playerStatsById: Record<number, { gamesPlayed: number; wins: number }>;
 	};
 
-	let { players }: TeamPlannerProps = $props();
+	let { players, playerStatsById }: TeamPlannerProps = $props();
 
 	const COINS_BUDGET = 140;
 	const MAX_TEAM_SIZE = 6;
 	const MAX_COMBO_REMAINING_BUDGET = 50;
+	const MAX_VISIBLE_COMBINATIONS = 150;
 	const TEAM_STORAGE_KEY = 'gbt-fantasy-picker-team';
 	const EXCLUDED_PLAYERS_STORAGE_KEY = 'gbt-fantasy-picker-excluded-players';
 	const FILTERS_STORAGE_KEY = 'gbt-fantasy-picker-filters';
@@ -65,6 +67,10 @@
 					genderFilter = parsedFilters.genderFilter;
 				}
 
+				if (isValidSortField(parsedFilters.sortField)) {
+					sortField = parsedFilters.sortField;
+				}
+
 				if (isValidSortOrder(parsedFilters.sortOrder)) {
 					sortOrder = parsedFilters.sortOrder;
 				}
@@ -91,18 +97,42 @@
 
 	type GenderFilter = 'all' | 'male' | 'female';
 	type SortOrder = 'desc' | 'asc';
+	type SortField = 'coins' | 'wins' | 'games';
 
 	let genderFilter = $state<GenderFilter>('all');
 	let sortOrder = $state<SortOrder>('desc');
+	let sortField = $state<SortField>('coins');
 
 	const visiblePlayers = $derived.by(() => {
+		const getSortValue = (player: Player): number => {
+			if (sortField === 'coins') {
+				return player.coins;
+			}
+
+			const stats = playerStatsById[player.id] ?? { gamesPlayed: 0, wins: 0 };
+
+			if (sortField === 'wins') {
+				return stats.wins;
+			}
+
+			return stats.gamesPlayed;
+		};
+
 		return [...players]
 			.filter((player) => {
 				if (genderFilter === 'all') return true;
 				if (genderFilter === 'male') return player.gender === Gender.Male;
 				return player.gender === Gender.Female;
 			})
-			.sort((a, b) => (sortOrder === 'desc' ? b.coins - a.coins : a.coins - b.coins));
+			.sort((a, b) => {
+				const valueDiff = getSortValue(a) - getSortValue(b);
+
+				if (valueDiff !== 0) {
+					return sortOrder === 'desc' ? -valueDiff : valueDiff;
+				}
+
+				return a.lastName.localeCompare(b.lastName);
+			});
 	});
 
 	const teamCoins = $derived.by(() => {
@@ -115,6 +145,10 @@
 
 	const teamMenCount = $derived.by(() => {
 		return team.filter((player) => player.gender === Gender.Male).length;
+	});
+
+	const teamGamesPlayed = $derived.by(() => {
+		return team.reduce((sum, player) => sum + (playerStatsById[player.id]?.gamesPlayed ?? 0), 0);
 	});
 
 	const teamGenderEmojis = $derived.by(() => {
@@ -132,6 +166,48 @@
 				combination.remainingBudget <= maxRemainingBudget
 			);
 		});
+	});
+
+	const sortedCombinationResults = $derived.by(() => {
+		if (filteredCombinationResults === null) {
+			return null;
+		}
+
+		const getGamesSum = (combination: TeamCombinationResult) =>
+			combination.addedPlayers.reduce(
+				(sum, player) => sum + (playerStatsById[player.id]?.gamesPlayed ?? 0),
+				0
+			);
+
+		const getWinsSum = (combination: TeamCombinationResult) =>
+			combination.addedPlayers.reduce(
+				(sum, player) => sum + (playerStatsById[player.id]?.wins ?? 0),
+				0
+			);
+
+		return [...filteredCombinationResults].sort((a, b) => {
+			const gamesDiff = getGamesSum(b) - getGamesSum(a);
+
+			if (gamesDiff !== 0) {
+				return gamesDiff;
+			}
+
+			const winsDiff = getWinsSum(b) - getWinsSum(a);
+
+			if (winsDiff !== 0) {
+				return winsDiff;
+			}
+
+			return a.remainingBudget - b.remainingBudget;
+		});
+	});
+
+	const visibleCombinationResults = $derived.by(() => {
+		if (sortedCombinationResults === null) {
+			return null;
+		}
+
+		return sortedCombinationResults.slice(0, MAX_VISIBLE_COMBINATIONS);
 	});
 
 	$effect(() => {
@@ -159,6 +235,7 @@
 			FILTERS_STORAGE_KEY,
 			JSON.stringify({
 				genderFilter,
+				sortField,
 				sortOrder,
 				maxGenderDifference,
 				maxRemainingBudget
@@ -227,6 +304,10 @@
 
 	function isValidSortOrder(value: unknown): value is SortOrder {
 		return value === 'asc' || value === 'desc';
+	}
+
+	function isValidSortField(value: unknown): value is SortField {
+		return value === 'coins' || value === 'wins' || value === 'games';
 	}
 
 	function isPlayerInTeam(playerId: number): boolean {
@@ -306,11 +387,26 @@
 		</div>
 
 		<div class="min-w-[160px] flex-1">
-			<label for="coin-sort" class="mb-1 block text-sm font-semibold text-stone-700"
-				>Coins Sortierung</label
+			<label for="sort-field" class="mb-1 block text-sm font-semibold text-stone-700"
+				>Sortieren nach</label
 			>
 			<select
-				id="coin-sort"
+				id="sort-field"
+				bind:value={sortField}
+				class="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm text-stone-800 shadow-sm outline-none ring-0 focus:border-amber-400"
+			>
+				<option value="coins">Coins</option>
+				<option value="wins">Wins</option>
+				<option value="games">Spiele</option>
+			</select>
+		</div>
+
+		<div class="min-w-[160px] flex-1">
+			<label for="sort-order" class="mb-1 block text-sm font-semibold text-stone-700"
+				>Sortierung</label
+			>
+			<select
+				id="sort-order"
 				bind:value={sortOrder}
 				class="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm text-stone-800 shadow-sm outline-none ring-0 focus:border-amber-400"
 			>
@@ -323,6 +419,7 @@
 	<div class="grid grid-cols-1 gap-4 xl:grid-cols-[1.35fr_1fr_1fr]">
 		<TeamPlayerList
 			{visiblePlayers}
+			{playerStatsById}
 			teamLength={team.length}
 			maxTeamSize={MAX_TEAM_SIZE}
 			{isPlayerExcluded}
@@ -334,12 +431,15 @@
 
 		<TeamCombinationsPanel
 			teamLength={team.length}
+			{teamGamesPlayed}
 			maxTeamSize={MAX_TEAM_SIZE}
 			excludedPlayersCount={excludedPlayerIds.length}
 			{maxGenderDifference}
 			{maxRemainingBudget}
 			maxComboRemainingBudget={MAX_COMBO_REMAINING_BUDGET}
-			{filteredCombinationResults}
+			filteredCombinationResults={visibleCombinationResults}
+			totalCombinationCount={sortedCombinationResults?.length ?? null}
+			{playerStatsById}
 			onClearExcludedPlayers={clearExcludedPlayers}
 			onSearchTeamCombinations={searchTeamCombinations}
 			onSetMaxGenderDifference={(value) => (maxGenderDifference = value)}

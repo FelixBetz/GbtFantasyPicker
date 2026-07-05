@@ -3,6 +3,7 @@
 
 	type TeamPlayerListProps = {
 		visiblePlayers: Player[];
+		playerStatsById: Record<number, { gamesPlayed: number; wins: number }>;
 		teamLength: number;
 		maxTeamSize: number;
 		isPlayerExcluded: (playerId: number) => boolean;
@@ -14,6 +15,7 @@
 
 	let {
 		visiblePlayers,
+		playerStatsById,
 		teamLength,
 		maxTeamSize,
 		isPlayerExcluded,
@@ -31,6 +33,7 @@
 	</div>
 	<ul class="grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-1">
 		{#each visiblePlayers as player}
+			{@const stats = playerStatsById[player.id] ?? { gamesPlayed: 0, wins: 0 }}
 			<li>
 				<div
 					class={`grid grid-cols-[1fr_auto] items-start gap-2 rounded-xl border p-1 shadow-sm ${
@@ -57,6 +60,9 @@
 								{player.firstName}
 								{player.lastName}
 							</h2>
+							<p class="m-0 mt-1 text-xs font-semibold text-stone-600">
+								Spiele: {stats.gamesPlayed} | Wins: {stats.wins}
+							</p>
 							{#if isPlayerInTeam(player.id)}
 								<p class="m-0 mt-1 text-xs font-semibold text-emerald-700">Im Team</p>
 							{:else if wouldExceedBudget(player)}

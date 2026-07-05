@@ -3,12 +3,15 @@
 
 	type TeamCombinationsPanelProps = {
 		teamLength: number;
+		teamGamesPlayed: number;
 		maxTeamSize: number;
 		excludedPlayersCount: number;
 		maxGenderDifference: number;
 		maxRemainingBudget: number;
 		maxComboRemainingBudget: number;
 		filteredCombinationResults: TeamCombinationResult[] | null;
+		totalCombinationCount: number | null;
+		playerStatsById: Record<number, { gamesPlayed: number; wins: number }>;
 		onClearExcludedPlayers: () => void;
 		onSearchTeamCombinations: () => void;
 		onSetMaxGenderDifference: (value: number) => void;
@@ -17,17 +20,33 @@
 
 	let {
 		teamLength,
+		teamGamesPlayed,
 		maxTeamSize,
 		excludedPlayersCount,
 		maxGenderDifference,
 		maxRemainingBudget,
 		maxComboRemainingBudget,
 		filteredCombinationResults,
+		totalCombinationCount,
+		playerStatsById,
 		onClearExcludedPlayers,
 		onSearchTeamCombinations,
 		onSetMaxGenderDifference,
 		onSetMaxRemainingBudget
 	}: TeamCombinationsPanelProps = $props();
+
+	function getStats(playerId: number) {
+		return playerStatsById[playerId] ?? { gamesPlayed: 0, wins: 0 };
+	}
+
+	function getCombinationTeamGames(combination: TeamCombinationResult): number {
+		const addedPlayersGames = combination.addedPlayers.reduce(
+			(sum, player) => sum + getStats(player.id).gamesPlayed,
+			0
+		);
+
+		return teamGamesPlayed + addedPlayersGames;
+	}
 
 	function handleGenderDifferenceInput(event: Event) {
 		const value = Number((event.currentTarget as HTMLInputElement).value);
@@ -44,7 +63,9 @@
 	<div class="mb-3 flex items-center justify-between">
 		<h3 class="text-lg font-bold text-stone-800">Mögliche Kombos</h3>
 		{#if filteredCombinationResults !== null}
-			<span class="text-xs font-semibold text-stone-500">{filteredCombinationResults.length}</span>
+			<span class="text-xs font-semibold text-stone-500">
+				{filteredCombinationResults.length}{#if totalCombinationCount !== null}/ {totalCombinationCount}{/if}
+			</span>
 		{/if}
 	</div>
 
@@ -143,10 +164,20 @@
 						<p class="text-lg leading-none">{combination.genderEmojiRow}</p>
 						<p class="text-xs font-semibold text-stone-500">Diff: {combination.genderDifference}</p>
 					</div>
+					<p class="mb-2 text-xs font-semibold text-stone-600">
+						Team-Spiele: {getCombinationTeamGames(combination)}
+					</p>
 					<ul class="space-y-1">
 						{#each combination.addedPlayers as addedPlayer}
+							{@const stats = getStats(addedPlayer.id)}
 							<li class="flex items-center justify-between gap-2 text-sm text-stone-700">
-								<span class="truncate">{addedPlayer.firstName} {addedPlayer.lastName}</span>
+								<span class="truncate">
+									{addedPlayer.firstName}
+									{addedPlayer.lastName}
+									<span class="ml-1 text-xs font-semibold text-stone-500">
+										(S: {stats.gamesPlayed} | W: {stats.wins})
+									</span>
+								</span>
 								<span class="inline-flex shrink-0 items-center gap-1 font-semibold text-amber-900">
 									{addedPlayer.coins}
 									<img src="/Coins.png" alt="Coins" class="h-4 w-4 object-contain" />

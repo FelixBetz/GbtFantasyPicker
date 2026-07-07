@@ -13,7 +13,7 @@
 
 	let { players, playerStatsById }: TeamPlannerProps = $props();
 
-	const COINS_BUDGET = 140;
+	const COINS_BUDGET = 160;
 	const MAX_TEAM_SIZE = 6;
 	const MAX_COMBO_REMAINING_BUDGET = 50;
 	const MAX_VISIBLE_COMBINATIONS = 150;

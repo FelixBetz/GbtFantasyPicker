@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { Gender, Player } from '$lib/player';
 	import TeamPlanner from '$lib/TeamPlanner.svelte';
 	import TournamentBracket from '$lib/TournamentBracket.svelte';
@@ -14,7 +15,7 @@
 		stats: Record<number, PlayerStats>;
 	};
 
-	let activeView = $state<ViewMode>('bracket-men');
+	let activeView = $state<ViewMode>('team');
 	let bracketStatsByView = $state<{
 		men: Record<number, PlayerStats>;
 		women: Record<number, PlayerStats>;
@@ -24,38 +25,39 @@
 	});
 
 	const players: Player[] = [
-		new Player(1, 2, Gender.Male, 'Nils', 'Ehlers', 50),
-		new Player(2, 1, Gender.Male, 'Lui', 'Wüst', 40),
-		new Player(3, 4, Gender.Male, 'Jonas', 'Sagstetter', 35),
-		new Player(4, 3, Gender.Male, 'Benedikt', 'Sagstetter', 30),
-		new Player(5, 6, Gender.Male, 'Momme', 'Lorenz', 20),
-		new Player(6, 5, Gender.Male, 'Tilo', 'Rietschel', 25),
-		new Player(7, 8, Gender.Male, 'Max', 'Just', 35),
-		new Player(8, 7, Gender.Male, 'Kalle', 'Pieper', 10),
-		new Player(9, 10, Gender.Male, 'Niklas', 'Held', 30),
-		new Player(10, 9, Gender.Male, 'Luis', 'Kubo', 20),
-		new Player(11, 12, Gender.Male, 'Jonas', 'Reinhardt', 25),
-		new Player(12, 11, Gender.Male, 'Robin', 'Sowa', 30),
-		new Player(13, 14, Gender.Male, 'Milan', 'Sievers', 15),
-		new Player(14, 13, Gender.Male, 'Eric', 'Stadie-Seeber', 15),
-		new Player(15, 16, Gender.Male, 'Jonas', 'Kaminski', 5),
-		new Player(16, 15, Gender.Male, 'Janik', 'Sambale', 5),
-		new Player(17, 18, Gender.Female, 'Lea', 'Kunst', 40),
-		new Player(18, 17, Gender.Female, 'Melanie', 'Paul', 45),
-		new Player(19, 20, Gender.Female, 'Anna-Lena', 'Grüne', 35),
-		new Player(20, 19, Gender.Female, 'Janne', 'Uhl', 20),
-		new Player(21, 22, Gender.Female, 'Sarah', 'Schulz', 25),
-		new Player(22, 21, Gender.Female, 'Kim', 'van de Velde', 40),
-		new Player(23, 24, Gender.Female, 'Chenoa', 'Christ', 10),
-		new Player(24, 23, Gender.Female, 'Sophia', 'Neuß', 15),
-		new Player(25, 26, Gender.Female, 'Nele', 'Barber', 20),
-		new Player(26, 25, Gender.Female, 'Melanie', 'Gernert', 35),
-		new Player(27, 28, Gender.Female, 'Mareet', 'Maidhof', 20),
-		new Player(28, 27, Gender.Female, 'Tabea', 'Schwarz', 20),
-		new Player(29, 30, Gender.Female, 'Emma', 'Gangey', 5),
-		new Player(30, 29, Gender.Female, 'Leonie', 'Klinke', 15),
-		new Player(31, 32, Gender.Female, 'Mila', 'Jancar', 5),
-		new Player(32, 31, Gender.Female, 'Josefine', 'Schäkel', 5)
+		new Player(Gender.Male, 'Tim', 'Berger', 40),
+		new Player(Gender.Male, 'Timo', 'Hammarberg', 40),
+		new Player(Gender.Male, 'Paul', 'Henning', 40),
+		new Player(Gender.Male, 'Lukas', 'Pfretzschner', 45),
+		new Player(Gender.Male, 'Philipp', 'Huster', 30),
+		new Player(Gender.Male, 'Sven', 'Winter', 30),
+		new Player(Gender.Male, 'Jonas', 'Sagstetter', 35),
+		new Player(Gender.Male, 'Robin', 'Sowa', 30),
+		new Player(Gender.Male, 'Momme', 'Lorenz', 30),
+		new Player(Gender.Male, 'Tilo', 'Rietschel', 30),
+		new Player(Gender.Male, 'Max', 'Just', 30),
+		new Player(Gender.Male, 'Kalle', 'Pieper', 10),
+		new Player(Gender.Male, 'Elouan', 'Chouikh-Barbez', 40),
+		new Player(Gender.Male, 'Joadel', 'Genevieve-Gardoque', 40),
+		new Player(Gender.Male, 'Milan', 'Sievers', 0),
+		new Player(Gender.Male, 'Eric', 'Stadie-Seeber', 0),
+		//////////////////////////////////////////////////////////////////////////
+		new Player(Gender.Female, 'Sandra', 'Ittlinger', 45),
+		new Player(Gender.Female, 'Kim', 'van de Velde', 40),
+		new Player(Gender.Female, 'Dorina', 'Klinger', 35),
+		new Player(Gender.Female, 'Ronja', 'Klinger', 35),
+		new Player(Gender.Female, 'Anna-Lena', 'Grüne', 35),
+		new Player(Gender.Female, 'Janne', 'Uhl', 20),
+		new Player(Gender.Female, 'Anna', 'Behlen', 20),
+		new Player(Gender.Female, 'Melanie', 'Paul', 45),
+		new Player(Gender.Female, 'Chenoa', 'Christ', 10),
+		new Player(Gender.Female, 'Sophia', 'Neuß', 15),
+		new Player(Gender.Female, 'Elea', 'Beutel', 25),
+		new Player(Gender.Female, 'Paula', 'Schürholz', 40),
+		new Player(Gender.Female, 'Ivea', 'Dumbauskaite', 30),
+		new Player(Gender.Female, 'Gerda', 'Grudzinskaite', 30),
+		new Player(Gender.Female, 'Melanie', 'Gernert', 35),
+		new Player(Gender.Female, 'Nele', 'Barber', 20)
 	];
 
 	function handleViewChange(nextMode: ViewMode) {
@@ -105,6 +107,12 @@
 	const playerStatsById = $derived({
 		...bracketStatsByView.men,
 		...bracketStatsByView.women
+	});
+
+	onMount(() => {
+		for (const player of players) {
+			player.id = players.indexOf(player); // Assign a unique ID based on the index in the players array
+		}
 	});
 </script>
 

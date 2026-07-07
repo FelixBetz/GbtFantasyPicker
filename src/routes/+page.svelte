@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { Gender, Player } from '$lib/player';
 	import TeamPlanner from '$lib/TeamPlanner.svelte';
 	import TournamentBracket from '$lib/TournamentBracket.svelte';
@@ -107,12 +106,6 @@
 	const playerStatsById = $derived({
 		...bracketStatsByView.men,
 		...bracketStatsByView.women
-	});
-
-	onMount(() => {
-		for (const player of players) {
-			player.id = players.indexOf(player); // Assign a unique ID based on the index in the players array
-		}
 	});
 </script>
 

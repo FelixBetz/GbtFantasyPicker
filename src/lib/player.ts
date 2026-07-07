@@ -6,6 +6,8 @@ export enum Gender {
 }
 
 export class Player {
+	static #nextId = 0;
+
 	id: number;
 	firstName: string;
 	lastName: string;
@@ -32,7 +34,6 @@ export class Player {
 		this.coins = coins;
 		this.points = 0;
 		this.position = 'Defender';
-
-		this.id = -1;
+		this.id = Player.#nextId++;
 	}
 }

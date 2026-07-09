@@ -28,6 +28,8 @@
 		new Player(Gender.Male, 'Timo', 'Hammarberg', 40),
 		new Player(Gender.Male, 'Paul', 'Henning', 40),
 		new Player(Gender.Male, 'Lukas', 'Pfretzschner', 45),
+		new Player(Gender.Male, 'Elouan', 'Chouikh-Barbez', 40),
+		new Player(Gender.Male, 'Joadel', 'Genevieve-Gardoque', 40),
 		new Player(Gender.Male, 'Philipp', 'Huster', 30),
 		new Player(Gender.Male, 'Sven', 'Winter', 30),
 		new Player(Gender.Male, 'Jonas', 'Sagstetter', 35),
@@ -36,27 +38,25 @@
 		new Player(Gender.Male, 'Tilo', 'Rietschel', 30),
 		new Player(Gender.Male, 'Max', 'Just', 30),
 		new Player(Gender.Male, 'Kalle', 'Pieper', 10),
-		new Player(Gender.Male, 'Elouan', 'Chouikh-Barbez', 40),
-		new Player(Gender.Male, 'Joadel', 'Genevieve-Gardoque', 40),
-		new Player(Gender.Male, 'Milan', 'Sievers', 0),
-		new Player(Gender.Male, 'Eric', 'Stadie-Seeber', 0),
+		new Player(Gender.Male, 'Tristan', 'Fröbel', 15),
+		new Player(Gender.Male, 'Tamo', 'Wüst', 20),
 		//////////////////////////////////////////////////////////////////////////
 		new Player(Gender.Female, 'Sandra', 'Ittlinger', 45),
 		new Player(Gender.Female, 'Kim', 'van de Velde', 40),
 		new Player(Gender.Female, 'Dorina', 'Klinger', 35),
 		new Player(Gender.Female, 'Ronja', 'Klinger', 35),
+		new Player(Gender.Female, 'Ieva', 'Dumbauskaite', 30),
+		new Player(Gender.Female, 'Gerda', 'Grudzinskaite', 30),
 		new Player(Gender.Female, 'Anna-Lena', 'Grüne', 35),
 		new Player(Gender.Female, 'Janne', 'Uhl', 20),
 		new Player(Gender.Female, 'Anna', 'Behlen', 20),
 		new Player(Gender.Female, 'Melanie', 'Paul', 45),
 		new Player(Gender.Female, 'Chenoa', 'Christ', 10),
 		new Player(Gender.Female, 'Sophia', 'Neuß', 15),
-		new Player(Gender.Female, 'Elea', 'Beutel', 25),
-		new Player(Gender.Female, 'Paula', 'Schürholz', 40),
-		new Player(Gender.Female, 'Ivea', 'Dumbauskaite', 30),
-		new Player(Gender.Female, 'Gerda', 'Grudzinskaite', 30),
 		new Player(Gender.Female, 'Melanie', 'Gernert', 35),
-		new Player(Gender.Female, 'Nele', 'Barber', 20)
+		new Player(Gender.Female, 'Nele', 'Barber', 20),
+		new Player(Gender.Female, 'Elea', 'Beutel', 25),
+		new Player(Gender.Female, 'Paula', 'Schürholz', 40)
 	];
 
 	function handleViewChange(nextMode: ViewMode) {

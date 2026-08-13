@@ -24,10 +24,10 @@
 	});
 
 	const players: Player[] = [
-		new Player(Gender.Male, 'Jonas', 'Sagstetter', 30),
-		new Player(Gender.Male, 'Eric', 'Stadie-Seeber', 15),
 		new Player(Gender.Male, 'Momme', 'Lorenz', 30),
 		new Player(Gender.Male, 'Tilo', 'Rietschel', 30),
+		new Player(Gender.Male, 'Ole', 'Sackermann', 5),
+		new Player(Gender.Male, 'Benedikt', 'Sagstetter', 30),
 		new Player(Gender.Male, 'Niklas', 'Held', 30),
 		new Player(Gender.Male, 'Luis', 'Kubo', 20),
 		new Player(Gender.Male, 'Jonas', 'Reinhardt', 25),
@@ -36,13 +36,11 @@
 		new Player(Gender.Male, 'Tamo', 'Wüst', 25),
 		new Player(Gender.Male, 'Colin', 'Paszkiewicz', 5),
 		new Player(Gender.Male, 'Charlie', 'Peters', 5),
-		new Player(Gender.Male, 'XX', 'XX', 160),
-		new Player(Gender.Male, 'XX', 'XX', 160),
-		new Player(Gender.Male, 'XX', 'XX', 160),
-		new Player(Gender.Male, 'XX', 'XX', 160),
+		new Player(Gender.Male, 'Luis', 'Henrichs', 20),
+		new Player(Gender.Male, 'Cedrik', 'Moede', 10),
+		new Player(Gender.Male, 'Hennes Jorge', 'Nissen', 15),
+		new Player(Gender.Male, 'Milan', 'Sievers', 15),
 		//////////////////////////////////////////////////////////////////////////
-		new Player(Gender.Female, 'Elea', 'Beutel', 30),
-		new Player(Gender.Female, 'Paula', 'Schürholz', 40),
 		new Player(Gender.Female, 'Chenoa', 'Christ', 10),
 		new Player(Gender.Female, 'Sophia', 'Neuß', 15),
 		new Player(Gender.Female, 'Nele', 'Barber', 20),
@@ -53,10 +51,12 @@
 		new Player(Gender.Female, 'Sarah', 'Schulz', 25),
 		new Player(Gender.Female, 'Leonie', 'Klinke', 15),
 		new Player(Gender.Female, 'Lisa-Sophie', 'Kotzan', 15),
-		new Player(Gender.Female, 'XX', 'XX', 160),
-		new Player(Gender.Female, 'XX', 'XX', 160),
-		new Player(Gender.Female, 'XX', 'XX', 160),
-		new Player(Gender.Female, 'XX', 'XX', 160)
+		new Player(Gender.Female, 'Rika', 'Dieckmann', 10),
+		new Player(Gender.Female, 'Clara', 'Dreßen', 10),
+		new Player(Gender.Female, 'Mila', 'Jancar', 5),
+		new Player(Gender.Female, 'Josefine', 'Schäkel', 5),
+		new Player(Gender.Female, 'Sandra', 'Otte', 5),
+		new Player(Gender.Female, 'Annalena', 'Richter', 5)
 	];
 
 	function handleViewChange(nextMode: ViewMode) {

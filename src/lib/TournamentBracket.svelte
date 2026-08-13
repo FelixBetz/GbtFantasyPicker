@@ -451,6 +451,17 @@
 		updateWinner(activeBracket, match.game, teamId);
 	}
 
+	function resetBracket() {
+		if (activeBracket === 'men') {
+			menMatches = normalizeWinners(createInitialMatches(menTeams));
+			localStorage.removeItem(STORAGE_KEYS.men);
+			return;
+		}
+
+		womenMatches = normalizeWinners(createInitialMatches(womenTeams));
+		localStorage.removeItem(STORAGE_KEYS.women);
+	}
+
 	const menTeams = $derived(buildTeams(0));
 	const womenTeams = $derived(buildTeams(16));
 
@@ -541,6 +552,13 @@
 					</button>
 				</div>
 			{/if}
+			<button
+				type="button"
+				onclick={resetBracket}
+				class="rounded-lg border border-rose-400/70 bg-rose-500/15 px-4 py-2 text-sm font-bold text-rose-100 transition hover:bg-rose-500/25"
+			>
+				Spielplan zurücksetzen
+			</button>
 		</div>
 	</header>
 

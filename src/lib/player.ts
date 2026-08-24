@@ -29,7 +29,12 @@ export class Player {
 		this.gender = gender;
 		this.firstName = firstName;
 		this.lastName = lastName;
-		this.imgurl = BASE_IMG_URL + this.firstName + '-' + this.lastName + '-Rot.png';
+		this.imgurl =
+			BASE_IMG_URL +
+			encodeURIComponent(this.firstName) +
+			'-' +
+			encodeURIComponent(this.lastName) +
+			'-Rot.png';
 
 		this.coins = coins;
 		this.points = 0;

@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { Player } from './player';
+	import { Gender, type Player } from './player';
 
 	type BracketKind = 'men' | 'women';
+	type BracketVariant = 'tourstop' | 'gbc-final';
 	type TeamRef =
 		| { kind: 'team'; teamId: number }
 		| { kind: 'winner'; game: number }
@@ -24,6 +25,29 @@
 		isFinal?: boolean;
 	};
 
+	type MatchSeed = {
+		game: number;
+		time: string;
+		teamARef: TeamRef;
+		teamBRef: TeamRef;
+		title?: string;
+		isFinal?: boolean;
+	};
+
+	type BracketColumn = {
+		title: string;
+		gameIds: number[];
+		containerClass: string;
+		matchWrapClasses?: string[];
+	};
+
+	type BracketLayout = {
+		teamCount: number;
+		minWidth: string;
+		columns: BracketColumn[];
+		matches: MatchSeed[];
+	};
+
 	type PlayerStats = {
 		gamesPlayed: number;
 		wins: number;
@@ -42,46 +66,183 @@
 
 	let { players, lockedBracket = null, onStatsChange }: TournamentBracketProps = $props();
 
-	const ROUND_COLUMN_GAME_IDS = {
-		roundOf16Winners: [1, 2, 3, 4],
-		quarterWinners: [7, 8],
-		center: [11, 13, 12],
-		quarterLosers: [9, 10],
-		roundOf16Losers: [5, 6]
-	} as const;
+	const BRACKET_VARIANT: BracketVariant = 'gbc-final';
 
-	const ROUND_TITLES = {
-		roundOf16Winners: 'Achtelfinale Winner',
-		quarterWinners: 'Viertelfinale Winner',
-		center: 'Halbfinale & Finale',
-		quarterLosers: 'Viertelfinale Loser',
-		roundOf16Losers: 'Achtelfinale Loser'
+	const BRACKET_LAYOUTS: Record<BracketVariant, BracketLayout> = {
+		tourstop: {
+			teamCount: 8,
+			minWidth: '1160px',
+			columns: [
+				{
+					title: 'Achtelfinale Winner',
+					gameIds: [1, 2, 3, 4],
+					containerClass: 'space-y-4',
+					matchWrapClasses: ['', '', 'mt-24', 'mt-24']
+				},
+				{ title: 'Viertelfinale Winner', gameIds: [7, 8], containerClass: 'space-y-40 pt-10' },
+				{ title: 'Halbfinale & Finale', gameIds: [11, 13, 12], containerClass: 'space-y-8 pt-12' },
+				{ title: 'Viertelfinale Loser', gameIds: [9, 10], containerClass: 'space-y-40 pt-10' },
+				{ title: 'Achtelfinale Loser', gameIds: [5, 6], containerClass: 'space-y-40 pt-2' }
+			],
+			matches: [
+				{ game: 1, time: 'Fr, 20:30', teamARef: { kind: 'team', teamId: 1 }, teamBRef: { kind: 'team', teamId: 8 } },
+				{ game: 2, time: 'Fr, 17:15', teamARef: { kind: 'team', teamId: 4 }, teamBRef: { kind: 'team', teamId: 5 } },
+				{ game: 3, time: 'Fr, 16:15', teamARef: { kind: 'team', teamId: 3 }, teamBRef: { kind: 'team', teamId: 6 } },
+				{ game: 4, time: 'Fr, 21:30', teamARef: { kind: 'team', teamId: 2 }, teamBRef: { kind: 'team', teamId: 7 } },
+				{ game: 5, time: 'Sa, 11:30', teamARef: { kind: 'loser', game: 1 }, teamBRef: { kind: 'loser', game: 2 } },
+				{ game: 6, time: 'Sa, 12:30', teamARef: { kind: 'loser', game: 3 }, teamBRef: { kind: 'loser', game: 4 } },
+				{ game: 7, time: 'Sa, 15:30', teamARef: { kind: 'winner', game: 1 }, teamBRef: { kind: 'winner', game: 2 } },
+				{ game: 8, time: 'Sa, 16:30', teamARef: { kind: 'winner', game: 3 }, teamBRef: { kind: 'winner', game: 4 } },
+				{ game: 9, time: 'Sa, 21:00', teamARef: { kind: 'winner', game: 5 }, teamBRef: { kind: 'loser', game: 8 } },
+				{ game: 10, time: 'Sa, 20:00', teamARef: { kind: 'winner', game: 6 }, teamBRef: { kind: 'loser', game: 7 } },
+				{ game: 11, time: 'So, 12:00', teamARef: { kind: 'winner', game: 7 }, teamBRef: { kind: 'winner', game: 9 } },
+				{ game: 12, time: 'So, 13:00', teamARef: { kind: 'winner', game: 8 }, teamBRef: { kind: 'winner', game: 10 } },
+				{ game: 13, time: 'So, 16:30', teamARef: { kind: 'winner', game: 11 }, teamBRef: { kind: 'winner', game: 12 }, title: 'FINALE', isFinal: true }
+			]
+		},
+		'gbc-final': {
+			teamCount: 16,
+			minWidth: '2120px',
+			columns: [
+				{ title: 'Runde 1 Winner', gameIds: [1, 2, 3, 4, 5, 6, 7, 8], containerClass: 'space-y-4' },
+				{ title: 'Achtelfinale Winner', gameIds: [9, 10, 11, 12], containerClass: 'space-y-28 pt-10' },
+				{ title: 'Viertelfinale Winner', gameIds: [21, 22, 23, 24], containerClass: 'space-y-32 pt-12' },
+				{ title: 'Halbfinale', gameIds: [27, 28], containerClass: 'space-y-24 pt-16' },
+				{ title: 'Finale', gameIds: [30], containerClass: 'pt-24' },
+				{ title: 'Runde 1 Loser', gameIds: [13, 14, 15, 16], containerClass: 'space-y-28 pt-10' },
+				{ title: 'Runde 2 Loser', gameIds: [17, 18, 19, 20], containerClass: 'space-y-24 pt-10' },
+				{ title: 'Achtelfinale Loser', gameIds: [25, 26], containerClass: 'space-y-24 pt-14' },
+				{ title: 'Viertelfinale Loser', gameIds: [29], containerClass: 'pt-20' }
+			],
+			matches: [
+				{ game: 1, time: 'Do, 12:30', teamARef: { kind: 'team', teamId: 1 }, teamBRef: { kind: 'team', teamId: 16 } },
+				{ game: 2, time: 'Do, 13:30', teamARef: { kind: 'team', teamId: 8 }, teamBRef: { kind: 'team', teamId: 9 } },
+				{ game: 3, time: 'Do, 13:30', teamARef: { kind: 'team', teamId: 5 }, teamBRef: { kind: 'team', teamId: 12 } },
+				{ game: 4, time: 'Do, 13:30', teamARef: { kind: 'team', teamId: 4 }, teamBRef: { kind: 'team', teamId: 13 } },
+				{ game: 5, time: 'Do, 14:30', teamARef: { kind: 'team', teamId: 3 }, teamBRef: { kind: 'team', teamId: 14 } },
+				{ game: 6, time: 'Do, 14:30', teamARef: { kind: 'team', teamId: 6 }, teamBRef: { kind: 'team', teamId: 11 } },
+				{ game: 7, time: 'Do, 19:00', teamARef: { kind: 'team', teamId: 7 }, teamBRef: { kind: 'team', teamId: 10 } },
+				{ game: 8, time: 'Do, 18:00', teamARef: { kind: 'team', teamId: 2 }, teamBRef: { kind: 'team', teamId: 15 } },
+				{ game: 9, time: 'Fr, 13:30', teamARef: { kind: 'winner', game: 1 }, teamBRef: { kind: 'winner', game: 2 } },
+				{ game: 10, time: 'Fr, 14:30', teamARef: { kind: 'winner', game: 3 }, teamBRef: { kind: 'winner', game: 4 } },
+				{ game: 11, time: 'Fr, 10:30', teamARef: { kind: 'winner', game: 5 }, teamBRef: { kind: 'winner', game: 6 } },
+				{ game: 12, time: 'Fr, 10:30', teamARef: { kind: 'winner', game: 7 }, teamBRef: { kind: 'winner', game: 8 } },
+				{ game: 13, time: 'Do, 18:00', teamARef: { kind: 'loser', game: 1 }, teamBRef: { kind: 'loser', game: 2 } },
+				{ game: 14, time: 'Do, 18:00', teamARef: { kind: 'loser', game: 3 }, teamBRef: { kind: 'loser', game: 4 } },
+				{ game: 15, time: 'Fr, 14:30', teamARef: { kind: 'loser', game: 5 }, teamBRef: { kind: 'loser', game: 6 } },
+				{ game: 16, time: 'Fr, 13:30', teamARef: { kind: 'loser', game: 7 }, teamBRef: { kind: 'loser', game: 8 } },
+				{ game: 17, time: 'Fr, 16:00', teamARef: { kind: 'winner', game: 13 }, teamBRef: { kind: 'loser', game: 12 } },
+				{ game: 18, time: 'Fr, 16:00', teamARef: { kind: 'winner', game: 14 }, teamBRef: { kind: 'loser', game: 11 } },
+				{ game: 19, time: 'Fr, 19:00', teamARef: { kind: 'winner', game: 15 }, teamBRef: { kind: 'loser', game: 10 } },
+				{ game: 20, time: 'Fr, 17:00', teamARef: { kind: 'winner', game: 16 }, teamBRef: { kind: 'loser', game: 9 } },
+				{ game: 21, time: 'Sa, 10:30', teamARef: { kind: 'winner', game: 9 }, teamBRef: { kind: 'winner', game: 10 } },
+				{ game: 22, time: 'Sa, 11:30', teamARef: { kind: 'winner', game: 11 }, teamBRef: { kind: 'winner', game: 12 } },
+				{ game: 23, time: 'Sa, 13:30', teamARef: { kind: 'winner', game: 18 }, teamBRef: { kind: 'winner', game: 17 } },
+				{ game: 24, time: 'Sa, 12:30', teamARef: { kind: 'winner', game: 20 }, teamBRef: { kind: 'winner', game: 19 } },
+				{ game: 25, time: 'Sa, 18:00', teamARef: { kind: 'winner', game: 24 }, teamBRef: { kind: 'loser', game: 22 } },
+				{ game: 26, time: 'Sa, 19:00', teamARef: { kind: 'winner', game: 23 }, teamBRef: { kind: 'loser', game: 21 } },
+				{ game: 27, time: 'So, 10:30', teamARef: { kind: 'winner', game: 21 }, teamBRef: { kind: 'winner', game: 25 } },
+				{ game: 28, time: 'So, 11:30', teamARef: { kind: 'winner', game: 22 }, teamBRef: { kind: 'winner', game: 26 } },
+				{ game: 29, time: 'So, 15:00', teamARef: { kind: 'loser', game: 27 }, teamBRef: { kind: 'loser', game: 28 }, title: 'kl. Finale' },
+				{ game: 30, time: 'So, 16:00', teamARef: { kind: 'winner', game: 27 }, teamBRef: { kind: 'winner', game: 28 }, title: 'FINALE', isFinal: true }
+			]
+		}
 	};
 
-	const STORAGE_KEYS: Record<BracketKind, string> = {
-		men: 'gbt-bracket-results-men',
-		women: 'gbt-bracket-results-women'
+	const GBC_MATCH_TIMES: Record<BracketKind, Record<number, string>> = {
+		men: {
+			1: 'Do, 12:30',
+			2: 'Do, 13:30',
+			3: 'Do, 13:30',
+			4: 'Do, 13:30',
+			5: 'Do, 14:30',
+			6: 'Do, 14:30',
+			7: 'Do, 19:00',
+			8: 'Do, 18:00',
+			9: 'Fr, 13:30',
+			10: 'Fr, 14:30',
+			11: 'Fr, 10:30',
+			12: 'Fr, 10:30',
+			13: 'Do, 18:00',
+			14: 'Do, 18:00',
+			15: 'Fr, 14:30',
+			16: 'Fr, 13:30',
+			17: 'Fr, 16:00',
+			18: 'Fr, 16:00',
+			19: 'Fr, 19:00',
+			20: 'Fr, 17:00',
+			21: 'Sa, 10:30',
+			22: 'Sa, 11:30',
+			23: 'Sa, 13:30',
+			24: 'Sa, 12:30',
+			25: 'Sa, 18:00',
+			26: 'Sa, 19:00',
+			27: 'So, 10:30',
+			28: 'So, 11:30',
+			29: 'So, 15:00',
+			30: 'So, 16:00'
+		},
+		women: {
+			1: 'Do, 10:30',
+			2: 'Do, 10:30',
+			3: 'Do, 10:30',
+			4: 'Do, 11:30',
+			5: 'Do, 11:30',
+			6: 'Do, 11:30',
+			7: 'Do, 12:30',
+			8: 'Do, 12:30',
+			9: 'Do, 16:00',
+			10: 'Do, 17:00',
+			11: 'Do, 20:00',
+			12: 'Do, 21:00',
+			13: 'Do, 16:00',
+			14: 'Do, 16:00',
+			15: 'Do, 17:00',
+			16: 'Do, 17:00',
+			17: 'Fr, 11:30',
+			18: 'Fr, 11:30',
+			19: 'Fr, 12:30',
+			20: 'Fr, 12:30',
+			21: 'Fr, 20:00',
+			22: 'Fr, 21:00',
+			23: 'Fr, 17:00',
+			24: 'Fr, 18:00',
+			25: 'Sa, 14:30',
+			26: 'Sa, 15:30',
+			27: 'Sa, 20:00',
+			28: 'Sa, 21:00',
+			29: 'So, 12:45',
+			30: 'So, 13:45'
+		}
 	};
 
-	function toShortName(player: Player): string {
-		const initial = player.firstName?.trim().charAt(0).toUpperCase();
+	function resolveMatchTime(
+		variant: BracketVariant,
+		bracket: BracketKind,
+		game: number,
+		fallbackTime: string
+	): string {
+		if (variant !== 'gbc-final') {
+			return fallbackTime;
+		}
+
+		return GBC_MATCH_TIMES[bracket][game] ?? fallbackTime;
+	}
+
+	function toBracketName(player: Player): string {
 		const lastName = player.lastName?.trim();
 
-		if (!initial && !lastName) {
+		if (!lastName) {
 			return 'TBD';
 		}
 
-		if (!lastName) {
-			return `${initial}.`;
-		}
-
-		return `${initial}. ${lastName}`;
+		return lastName;
 	}
 
-	function buildTeams(startIndex: number): TeamEntry[] {
-		return Array.from({ length: 8 }, (_, teamIndex) => {
-			const firstPlayer = players[startIndex + teamIndex * 2];
-			const secondPlayer = players[startIndex + teamIndex * 2 + 1];
+	function buildTeamsForPool(sourcePlayers: Player[], teamCount: number): TeamEntry[] {
+		return Array.from({ length: teamCount }, (_, teamIndex) => {
+			const firstPlayer = sourcePlayers[teamIndex * 2];
+			const secondPlayer = sourcePlayers[teamIndex * 2 + 1];
 			const playerIds = [firstPlayer?.id, secondPlayer?.id].filter(
 				(id): id is number => typeof id === 'number'
 			);
@@ -96,101 +257,44 @@
 
 			return {
 				id: teamIndex + 1,
-				label: `${toShortName(firstPlayer)} / ${toShortName(secondPlayer)}`,
+				label: `${toBracketName(firstPlayer)} / ${toBracketName(secondPlayer)}`,
 				playerIds
 			};
 		});
 	}
 
-	function createInitialMatches(teams: TeamEntry[]): MatchState[] {
-		const seedMatchups: [number, number, number, string][] = [
-			[1, 1, 8, 'Fr, 20:30'],
-			[2, 4, 5, 'Fr, 17:15'],
-			[3, 3, 6, 'Fr, 16:15'],
-			[4, 2, 7, 'Fr, 21:30']
-		];
-
-		const openingMatches = seedMatchups.map(([game, seedA, seedB, time]) => {
-			const teamA = teams[seedA - 1];
-			const teamB = teams[seedB - 1];
+	function createInitialMatches(
+		variant: BracketVariant,
+		bracket: BracketKind,
+		layout: BracketLayout,
+		teams: TeamEntry[]
+	): MatchState[] {
+		return layout.matches.map((match) => {
+			const teamARef: TeamRef =
+				match.teamARef.kind === 'team'
+					? {
+						kind: 'team',
+						teamId: teams[match.teamARef.teamId - 1]?.id ?? match.teamARef.teamId
+					}
+					: match.teamARef;
+			const teamBRef: TeamRef =
+				match.teamBRef.kind === 'team'
+					? {
+						kind: 'team',
+						teamId: teams[match.teamBRef.teamId - 1]?.id ?? match.teamBRef.teamId
+					}
+					: match.teamBRef;
 
 			return {
-				game,
-				time,
-				teamARef: { kind: 'team', teamId: teamA?.id ?? seedA },
-				teamBRef: { kind: 'team', teamId: teamB?.id ?? seedB },
-				winnerTeamId: null
+				game: match.game,
+				time: resolveMatchTime(variant, bracket, match.game, match.time),
+				teamARef,
+				teamBRef,
+				winnerTeamId: null,
+				title: match.title,
+				isFinal: match.isFinal
 			} satisfies MatchState;
 		});
-
-		return [
-			...openingMatches,
-			{
-				game: 5,
-				time: 'Sa, 11:30',
-				teamARef: { kind: 'loser', game: 1 },
-				teamBRef: { kind: 'loser', game: 2 },
-				winnerTeamId: null
-			},
-			{
-				game: 6,
-				time: 'Sa, 12:30',
-				teamARef: { kind: 'loser', game: 3 },
-				teamBRef: { kind: 'loser', game: 4 },
-				winnerTeamId: null
-			},
-			{
-				game: 7,
-				time: 'Sa, 15:30',
-				teamARef: { kind: 'winner', game: 1 },
-				teamBRef: { kind: 'winner', game: 2 },
-				winnerTeamId: null
-			},
-			{
-				game: 8,
-				time: 'Sa, 16:30',
-				teamARef: { kind: 'winner', game: 3 },
-				teamBRef: { kind: 'winner', game: 4 },
-				winnerTeamId: null
-			},
-			{
-				game: 9,
-				time: 'Sa, 21:00',
-				teamARef: { kind: 'winner', game: 5 },
-				teamBRef: { kind: 'loser', game: 8 },
-				winnerTeamId: null
-			},
-			{
-				game: 10,
-				time: 'Sa, 20:00',
-				teamARef: { kind: 'winner', game: 6 },
-				teamBRef: { kind: 'loser', game: 7 },
-				winnerTeamId: null
-			},
-			{
-				game: 11,
-				time: 'So, 12:00',
-				teamARef: { kind: 'winner', game: 7 },
-				teamBRef: { kind: 'winner', game: 9 },
-				winnerTeamId: null
-			},
-			{
-				game: 12,
-				time: 'So, 13:00',
-				teamARef: { kind: 'winner', game: 8 },
-				teamBRef: { kind: 'winner', game: 10 },
-				winnerTeamId: null
-			},
-			{
-				game: 13,
-				time: 'So, 16:30',
-				teamARef: { kind: 'winner', game: 11 },
-				teamBRef: { kind: 'winner', game: 12 },
-				winnerTeamId: null,
-				title: 'FINALE',
-				isFinal: true
-			}
-		];
 	}
 
 	function getMatchByGame(matches: MatchState[], game: number): MatchState | undefined {
@@ -317,8 +421,15 @@
 		return normalizeWinners(mergedMatches);
 	}
 
-	function loadWinnerMap(bracket: BracketKind): Record<number, number | null> | null {
-		const rawValue = localStorage.getItem(STORAGE_KEYS[bracket]);
+	function getStorageKey(variant: BracketVariant, bracket: BracketKind): string {
+		return `gbt-bracket-results-v2-${variant}-${bracket}`;
+	}
+
+	function loadWinnerMap(
+		variant: BracketVariant,
+		bracket: BracketKind
+	): Record<number, number | null> | null {
+		const rawValue = localStorage.getItem(getStorageKey(variant, bracket));
 
 		if (!rawValue) {
 			return null;
@@ -328,7 +439,7 @@
 			const parsedValue: unknown = JSON.parse(rawValue);
 
 			if (!parsedValue || typeof parsedValue !== 'object' || Array.isArray(parsedValue)) {
-				localStorage.removeItem(STORAGE_KEYS[bracket]);
+				localStorage.removeItem(getStorageKey(variant, bracket));
 				return null;
 			}
 
@@ -348,13 +459,13 @@
 
 			return winnerMap;
 		} catch {
-			localStorage.removeItem(STORAGE_KEYS[bracket]);
+			localStorage.removeItem(getStorageKey(variant, bracket));
 			return null;
 		}
 	}
 
-	function saveWinnerMap(bracket: BracketKind, matches: MatchState[]): void {
-		localStorage.setItem(STORAGE_KEYS[bracket], JSON.stringify(toWinnerMap(matches)));
+	function saveWinnerMap(variant: BracketVariant, bracket: BracketKind, matches: MatchState[]): void {
+		localStorage.setItem(getStorageKey(variant, bracket), JSON.stringify(toWinnerMap(matches)));
 	}
 
 	function updateWinner(bracket: BracketKind, game: number, winnerTeamId: number) {
@@ -376,6 +487,20 @@
 		}
 
 		womenMatches = normalized;
+	}
+
+	function restoreMatches(variant: BracketVariant, bracket: BracketKind): MatchState[] {
+		const layout = BRACKET_LAYOUTS[variant];
+		const sourcePlayers = bracket === 'men' ? menPlayers : womenPlayers;
+		const teams = buildTeamsForPool(sourcePlayers, layout.teamCount);
+		const matches = createInitialMatches(variant, bracket, layout, teams);
+		const storedWinnerMap = loadWinnerMap(variant, bracket);
+
+		if (!storedWinnerMap) {
+			return matches;
+		}
+
+		return applyWinnerMap(matches, storedWinnerMap);
 	}
 
 	function computePlayerStats(
@@ -453,39 +578,33 @@
 
 	function resetBracket() {
 		if (activeBracket === 'men') {
-			menMatches = normalizeWinners(createInitialMatches(menTeams));
-			localStorage.removeItem(STORAGE_KEYS.men);
+			menMatches = normalizeWinners(
+				createInitialMatches(BRACKET_VARIANT, 'men', BRACKET_LAYOUTS[BRACKET_VARIANT], menTeams)
+			);
+			localStorage.removeItem(getStorageKey(BRACKET_VARIANT, 'men'));
 			return;
 		}
 
-		womenMatches = normalizeWinners(createInitialMatches(womenTeams));
-		localStorage.removeItem(STORAGE_KEYS.women);
+		womenMatches = normalizeWinners(
+			createInitialMatches(BRACKET_VARIANT, 'women', BRACKET_LAYOUTS[BRACKET_VARIANT], womenTeams)
+		);
+		localStorage.removeItem(getStorageKey(BRACKET_VARIANT, 'women'));
 	}
 
-	const menTeams = $derived(buildTeams(0));
-	const womenTeams = $derived(buildTeams(16));
+	const activeLayout = $derived(BRACKET_LAYOUTS[BRACKET_VARIANT]);
+	const menPlayers = $derived(players.filter((player) => player.gender === Gender.Male));
+	const womenPlayers = $derived(players.filter((player) => player.gender === Gender.Female));
+	const menTeams = $derived(buildTeamsForPool(menPlayers, activeLayout.teamCount));
+	const womenTeams = $derived(buildTeamsForPool(womenPlayers, activeLayout.teamCount));
 
 	let menMatches = $state<MatchState[]>([]);
 	let womenMatches = $state<MatchState[]>([]);
 	let activeBracket = $state<BracketKind>('men');
 	let hasLoadedStoredResults = $state(false);
 
-	$effect(() => {
-		menMatches = normalizeWinners(createInitialMatches(menTeams));
-		womenMatches = normalizeWinners(createInitialMatches(womenTeams));
-	});
-
 	onMount(() => {
-		const storedMenWinners = loadWinnerMap('men');
-		const storedWomenWinners = loadWinnerMap('women');
-
-		if (storedMenWinners) {
-			menMatches = applyWinnerMap(createInitialMatches(menTeams), storedMenWinners);
-		}
-
-		if (storedWomenWinners) {
-			womenMatches = applyWinnerMap(createInitialMatches(womenTeams), storedWomenWinners);
-		}
+		menMatches = restoreMatches(BRACKET_VARIANT, 'men');
+		womenMatches = restoreMatches(BRACKET_VARIANT, 'women');
 
 		hasLoadedStoredResults = true;
 	});
@@ -506,8 +625,8 @@
 			return;
 		}
 
-		saveWinnerMap('men', menMatches);
-		saveWinnerMap('women', womenMatches);
+		saveWinnerMap(BRACKET_VARIANT, 'men', menMatches);
+		saveWinnerMap(BRACKET_VARIANT, 'women', womenMatches);
 	});
 
 	const showBracketTabs = $derived(lockedBracket === null);
@@ -525,223 +644,97 @@
 					German Beach Tour
 				</p>
 				<h1 class="text-xl font-black tracking-tight sm:text-2xl">Turnier-Spielplan</h1>
+				<p class="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+					Finale = GBC
+				</p>
 			</div>
-			{#if showBracketTabs}
-				<div class="inline-flex rounded-xl border border-slate-600 bg-slate-800 p-1">
-					<button
-						type="button"
-						onclick={() => (activeBracket = 'men')}
-						class={`rounded-lg px-4 py-2 text-sm font-bold transition ${
-							activeBracket === 'men'
-								? 'bg-sky-300 text-slate-950 shadow-sm'
-								: 'text-slate-200 hover:bg-slate-700'
-						}`}
-					>
-						Manner
-					</button>
-					<button
-						type="button"
-						onclick={() => (activeBracket = 'women')}
-						class={`rounded-lg px-4 py-2 text-sm font-bold transition ${
-							activeBracket === 'women'
-								? 'bg-sky-300 text-slate-950 shadow-sm'
-								: 'text-slate-200 hover:bg-slate-700'
-						}`}
-					>
-						Frauen
-					</button>
-				</div>
-			{/if}
-			<button
-				type="button"
-				onclick={resetBracket}
-				class="rounded-lg border border-rose-400/70 bg-rose-500/15 px-4 py-2 text-sm font-bold text-rose-100 transition hover:bg-rose-500/25"
-			>
-				Spielplan zurücksetzen
-			</button>
+			<div class="flex flex-wrap items-center gap-2">
+				{#if showBracketTabs}
+					<div class="inline-flex rounded-xl border border-slate-600 bg-slate-800 p-1">
+						<button
+							type="button"
+							onclick={() => (activeBracket = 'men')}
+							class={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+								activeBracket === 'men'
+									? 'bg-sky-300 text-slate-950 shadow-sm'
+									: 'text-slate-200 hover:bg-slate-700'
+							}`}
+						>
+							Männer
+						</button>
+						<button
+							type="button"
+							onclick={() => (activeBracket = 'women')}
+							class={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+								activeBracket === 'women'
+									? 'bg-sky-300 text-slate-950 shadow-sm'
+									: 'text-slate-200 hover:bg-slate-700'
+							}`}
+						>
+							Frauen
+						</button>
+					</div>
+				{/if}
+				<button
+					type="button"
+					onclick={resetBracket}
+					class="rounded-lg border border-rose-400/70 bg-rose-500/15 px-4 py-2 text-sm font-bold text-rose-100 transition hover:bg-rose-500/25"
+				>
+					Spielplan zurücksetzen
+				</button>
+			</div>
 		</div>
 	</header>
 
 	<div
 		class="bracket-surface overflow-x-auto rounded-2xl border border-slate-700 p-3 shadow-2xl sm:p-4"
 	>
-		<div class="bracket-grid min-w-[1160px] gap-4">
-			<div class="space-y-4">
-				<h2 class="bracket-column-title">{ROUND_TITLES.roundOf16Winners}</h2>
-				{#each ROUND_COLUMN_GAME_IDS.roundOf16Winners as gameId, index (gameId)}
-					{@const match = getMatchByGame(currentMatches, gameId)}
-					{#if match}
-						<div class={`match-wrap ${index >= 2 ? 'mt-24' : ''}`}>
-							<div class="match-card">
-								<div class="match-head">
-									<p>Spiel {match.game}</p>
-									<p>{match.time}</p>
+		<div class="bracket-grid gap-4" style={`--bracket-columns: ${activeLayout.columns.length}; min-width: ${activeLayout.minWidth};`}>
+			{#each activeLayout.columns as column}
+				<div class={column.containerClass}>
+					<h2 class="bracket-column-title">{column.title}</h2>
+					{#each column.gameIds as gameId, index (gameId)}
+						{@const match = getMatchByGame(currentMatches, gameId)}
+						{#if match}
+							<div class={`match-wrap ${column.matchWrapClasses?.[index] ?? ''} ${match.isFinal ? 'final-wrap' : ''}`}>
+								{#if match.isFinal}
+									<div class="final-icon">🏆</div>
+								{/if}
+								<div class={`match-card ${match.isFinal ? 'final-card' : ''}`}>
+									<div class="match-head">
+										<p>
+											Spiel {match.game}
+											{#if match.title}
+												- {match.title}
+											{/if}
+										</p>
+										<p>{match.time}</p>
+									</div>
+									<button
+										type="button"
+										onclick={() => handleTeamClick(match, match.teamARef)}
+										disabled={!canSelectTeam(match.teamARef, currentMatches)}
+										class={`team-row team-button ${isWinner(match, match.teamARef, currentMatches) ? 'team-row-winner' : ''}`}
+									>
+										{getSlotLabel(match.teamARef, currentMatches, currentTeams)}
+									</button>
+									<button
+										type="button"
+										onclick={() => handleTeamClick(match, match.teamBRef)}
+										disabled={!canSelectTeam(match.teamBRef, currentMatches)}
+										class={`team-row team-button ${isWinner(match, match.teamBRef, currentMatches) ? 'team-row-winner' : ''}`}
+									>
+										{getSlotLabel(match.teamBRef, currentMatches, currentTeams)}
+									</button>
+									<span class={`connector ${column.title.includes('Loser') ? 'connector-left' : 'connector-right'}`}>
+										{column.title.includes('Loser') ? '←' : '→'}
+									</span>
 								</div>
-								<button
-									type="button"
-									onclick={() => handleTeamClick(match, match.teamARef)}
-									disabled={!canSelectTeam(match.teamARef, currentMatches)}
-									class={`team-row team-button ${isWinner(match, match.teamARef, currentMatches) ? 'team-row-winner' : ''}`}
-								>
-									{getSlotLabel(match.teamARef, currentMatches, currentTeams)}
-								</button>
-								<button
-									type="button"
-									onclick={() => handleTeamClick(match, match.teamBRef)}
-									disabled={!canSelectTeam(match.teamBRef, currentMatches)}
-									class={`team-row team-button ${isWinner(match, match.teamBRef, currentMatches) ? 'team-row-winner' : ''}`}
-								>
-									{getSlotLabel(match.teamBRef, currentMatches, currentTeams)}
-								</button>
-								<span class="connector connector-right">&rarr;</span>
 							</div>
-						</div>
-					{/if}
-				{/each}
-			</div>
-
-			<div class="space-y-40 pt-10">
-				<h2 class="bracket-column-title">{ROUND_TITLES.quarterWinners}</h2>
-				{#each ROUND_COLUMN_GAME_IDS.quarterWinners as gameId (gameId)}
-					{@const match = getMatchByGame(currentMatches, gameId)}
-					{#if match}
-						<div class="match-wrap">
-							<div class="match-card">
-								<div class="match-head">
-									<p>Spiel {match.game}</p>
-									<p>{match.time}</p>
-								</div>
-								<button
-									type="button"
-									onclick={() => handleTeamClick(match, match.teamARef)}
-									disabled={!canSelectTeam(match.teamARef, currentMatches)}
-									class={`team-row team-button ${isWinner(match, match.teamARef, currentMatches) ? 'team-row-winner' : ''}`}
-								>
-									{getSlotLabel(match.teamARef, currentMatches, currentTeams)}
-								</button>
-								<button
-									type="button"
-									onclick={() => handleTeamClick(match, match.teamBRef)}
-									disabled={!canSelectTeam(match.teamBRef, currentMatches)}
-									class={`team-row team-button ${isWinner(match, match.teamBRef, currentMatches) ? 'team-row-winner' : ''}`}
-								>
-									{getSlotLabel(match.teamBRef, currentMatches, currentTeams)}
-								</button>
-								<span class="connector connector-right">&rarr;</span>
-							</div>
-						</div>
-					{/if}
-				{/each}
-			</div>
-
-			<div class="space-y-8 pt-12">
-				<h2 class="bracket-column-title">{ROUND_TITLES.center}</h2>
-				{#each ROUND_COLUMN_GAME_IDS.center as gameId (gameId)}
-					{@const match = getMatchByGame(currentMatches, gameId)}
-					{#if match}
-						<div class={`match-wrap ${match.isFinal ? 'final-wrap' : ''}`}>
-							{#if match.isFinal}
-								<div class="final-icon">🏆</div>
-							{/if}
-							<div class={`match-card ${match.isFinal ? 'final-card' : ''}`}>
-								<div class="match-head">
-									<p>
-										Spiel {match.game}
-										{#if match.title}
-											- {match.title}
-										{/if}
-									</p>
-									<p>{match.time}</p>
-								</div>
-								<button
-									type="button"
-									onclick={() => handleTeamClick(match, match.teamARef)}
-									disabled={!canSelectTeam(match.teamARef, currentMatches)}
-									class={`team-row team-button ${isWinner(match, match.teamARef, currentMatches) ? 'team-row-winner' : ''}`}
-								>
-									{getSlotLabel(match.teamARef, currentMatches, currentTeams)}
-								</button>
-								<button
-									type="button"
-									onclick={() => handleTeamClick(match, match.teamBRef)}
-									disabled={!canSelectTeam(match.teamBRef, currentMatches)}
-									class={`team-row team-button ${isWinner(match, match.teamBRef, currentMatches) ? 'team-row-winner' : ''}`}
-								>
-									{getSlotLabel(match.teamBRef, currentMatches, currentTeams)}
-								</button>
-							</div>
-						</div>
-					{/if}
-				{/each}
-			</div>
-
-			<div class="space-y-40 pt-10">
-				<h2 class="bracket-column-title">{ROUND_TITLES.quarterLosers}</h2>
-				{#each ROUND_COLUMN_GAME_IDS.quarterLosers as gameId (gameId)}
-					{@const match = getMatchByGame(currentMatches, gameId)}
-					{#if match}
-						<div class="match-wrap">
-							<div class="match-card">
-								<div class="match-head">
-									<p>Spiel {match.game}</p>
-									<p>{match.time}</p>
-								</div>
-								<button
-									type="button"
-									onclick={() => handleTeamClick(match, match.teamARef)}
-									disabled={!canSelectTeam(match.teamARef, currentMatches)}
-									class={`team-row team-button ${isWinner(match, match.teamARef, currentMatches) ? 'team-row-winner' : ''}`}
-								>
-									{getSlotLabel(match.teamARef, currentMatches, currentTeams)}
-								</button>
-								<button
-									type="button"
-									onclick={() => handleTeamClick(match, match.teamBRef)}
-									disabled={!canSelectTeam(match.teamBRef, currentMatches)}
-									class={`team-row team-button ${isWinner(match, match.teamBRef, currentMatches) ? 'team-row-winner' : ''}`}
-								>
-									{getSlotLabel(match.teamBRef, currentMatches, currentTeams)}
-								</button>
-								<span class="connector connector-left">&larr;</span>
-							</div>
-						</div>
-					{/if}
-				{/each}
-			</div>
-
-			<div class="space-y-40 pt-2">
-				<h2 class="bracket-column-title">{ROUND_TITLES.roundOf16Losers}</h2>
-				{#each ROUND_COLUMN_GAME_IDS.roundOf16Losers as gameId (gameId)}
-					{@const match = getMatchByGame(currentMatches, gameId)}
-					{#if match}
-						<div class="match-wrap">
-							<div class="match-card">
-								<div class="match-head">
-									<p>Spiel {match.game}</p>
-									<p>{match.time}</p>
-								</div>
-								<button
-									type="button"
-									onclick={() => handleTeamClick(match, match.teamARef)}
-									disabled={!canSelectTeam(match.teamARef, currentMatches)}
-									class={`team-row team-button ${isWinner(match, match.teamARef, currentMatches) ? 'team-row-winner' : ''}`}
-								>
-									{getSlotLabel(match.teamARef, currentMatches, currentTeams)}
-								</button>
-								<button
-									type="button"
-									onclick={() => handleTeamClick(match, match.teamBRef)}
-									disabled={!canSelectTeam(match.teamBRef, currentMatches)}
-									class={`team-row team-button ${isWinner(match, match.teamBRef, currentMatches) ? 'team-row-winner' : ''}`}
-								>
-									{getSlotLabel(match.teamBRef, currentMatches, currentTeams)}
-								</button>
-								<span class="connector connector-left">&larr;</span>
-							</div>
-						</div>
-					{/if}
-				{/each}
-			</div>
+						{/if}
+					{/each}
+				</div>
+			{/each}
 		</div>
 	</div>
 </section>
@@ -759,7 +752,7 @@
 
 	.bracket-grid {
 		display: grid;
-		grid-template-columns: repeat(5, minmax(200px, 1fr));
+		grid-template-columns: repeat(var(--bracket-columns), minmax(200px, 1fr));
 	}
 
 	.bracket-column-title {

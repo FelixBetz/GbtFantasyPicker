@@ -66,8 +66,6 @@
 
 	let { players, lockedBracket = null, onStatsChange }: TournamentBracketProps = $props();
 
-	const BRACKET_VARIANT: BracketVariant = 'gbc-final';
-
 	const BRACKET_LAYOUTS: Record<BracketVariant, BracketLayout> = {
 		tourstop: {
 			teamCount: 8,
@@ -148,6 +146,14 @@
 			]
 		}
 	};
+
+	function resolveVariantForTeamCount(teamCount: number): BracketVariant {
+		return teamCount >= BRACKET_LAYOUTS['gbc-final'].teamCount ? 'gbc-final' : 'tourstop';
+	}
+
+	function getVariantLabel(variant: BracketVariant): string {
+		return variant === 'gbc-final' ? 'Finale = GBC' : 'Normaler Tourstop';
+	}
 
 	const GBC_MATCH_TIMES: Record<BracketKind, Record<number, string>> = {
 		men: {
@@ -577,25 +583,31 @@
 	}
 
 	function resetBracket() {
+		const variant = activeBracket === 'men' ? menVariant : womenVariant;
+		const layout = BRACKET_LAYOUTS[variant];
+
 		if (activeBracket === 'men') {
 			menMatches = normalizeWinners(
-				createInitialMatches(BRACKET_VARIANT, 'men', BRACKET_LAYOUTS[BRACKET_VARIANT], menTeams)
+				createInitialMatches(variant, 'men', layout, menTeams)
 			);
-			localStorage.removeItem(getStorageKey(BRACKET_VARIANT, 'men'));
+			localStorage.removeItem(getStorageKey(variant, 'men'));
 			return;
 		}
 
 		womenMatches = normalizeWinners(
-			createInitialMatches(BRACKET_VARIANT, 'women', BRACKET_LAYOUTS[BRACKET_VARIANT], womenTeams)
+			createInitialMatches(variant, 'women', layout, womenTeams)
 		);
-		localStorage.removeItem(getStorageKey(BRACKET_VARIANT, 'women'));
+		localStorage.removeItem(getStorageKey(variant, 'women'));
 	}
 
-	const activeLayout = $derived(BRACKET_LAYOUTS[BRACKET_VARIANT]);
 	const menPlayers = $derived(players.filter((player) => player.gender === Gender.Male));
 	const womenPlayers = $derived(players.filter((player) => player.gender === Gender.Female));
-	const menTeams = $derived(buildTeamsForPool(menPlayers, activeLayout.teamCount));
-	const womenTeams = $derived(buildTeamsForPool(womenPlayers, activeLayout.teamCount));
+	const menVariant = $derived(resolveVariantForTeamCount(Math.floor(menPlayers.length / 2)));
+	const womenVariant = $derived(resolveVariantForTeamCount(Math.floor(womenPlayers.length / 2)));
+	const menLayout = $derived(BRACKET_LAYOUTS[menVariant]);
+	const womenLayout = $derived(BRACKET_LAYOUTS[womenVariant]);
+	const menTeams = $derived(buildTeamsForPool(menPlayers, menLayout.teamCount));
+	const womenTeams = $derived(buildTeamsForPool(womenPlayers, womenLayout.teamCount));
 
 	let menMatches = $state<MatchState[]>([]);
 	let womenMatches = $state<MatchState[]>([]);
@@ -603,8 +615,8 @@
 	let hasLoadedStoredResults = $state(false);
 
 	onMount(() => {
-		menMatches = restoreMatches(BRACKET_VARIANT, 'men');
-		womenMatches = restoreMatches(BRACKET_VARIANT, 'women');
+		menMatches = restoreMatches(menVariant, 'men');
+		womenMatches = restoreMatches(womenVariant, 'women');
 
 		hasLoadedStoredResults = true;
 	});
@@ -625,11 +637,14 @@
 			return;
 		}
 
-		saveWinnerMap(BRACKET_VARIANT, 'men', menMatches);
-		saveWinnerMap(BRACKET_VARIANT, 'women', womenMatches);
+		saveWinnerMap(menVariant, 'men', menMatches);
+		saveWinnerMap(womenVariant, 'women', womenMatches);
 	});
 
 	const showBracketTabs = $derived(lockedBracket === null);
+	const currentVariant = $derived(activeBracket === 'men' ? menVariant : womenVariant);
+	const activeLayout = $derived(BRACKET_LAYOUTS[currentVariant]);
+	const currentVariantLabel = $derived(getVariantLabel(currentVariant));
 	const currentMatches = $derived(activeBracket === 'men' ? menMatches : womenMatches);
 	const currentTeams = $derived(activeBracket === 'men' ? menTeams : womenTeams);
 </script>
@@ -645,7 +660,7 @@
 				</p>
 				<h1 class="text-xl font-black tracking-tight sm:text-2xl">Turnier-Spielplan</h1>
 				<p class="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-					Finale = GBC
+					{currentVariantLabel}
 				</p>
 			</div>
 			<div class="flex flex-wrap items-center gap-2">

@@ -40,3 +40,32 @@ npm run build
 You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+
+## DVV Seed List Extraction
+
+Use the extraction script to read names from a DVV list link and write them directly into a generated source file:
+
+```sh
+npm run extract:dvv -- https://beach.volleyball-verband.de/public/tur-ml.php?id=14667
+```
+
+Notes:
+
+- The script normalizes `tur-ml.php` to `tur-sl.php` (setzliste).
+- Men are loaded automatically via `id + 1`.
+- Output includes player names from the linked team/player profiles.
+- Bracket mode suggestion is automatic from team count.
+- `16` teams -> `gbc-final`.
+- Otherwise -> `tourstop`.
+
+Optional flags:
+
+```sh
+npm run extract:dvv -- <url> --json
+npm run extract:dvv -- <url> --svelte
+npm run extract:dvv -- <url> --write
+npm run extract:dvv -- <url> --write=src/data/players.generated.ts
+```
+
+By default, output is written to `src/data/players.generated.ts`.
+`--write` and `--write-file=<path>` let you choose another target file.

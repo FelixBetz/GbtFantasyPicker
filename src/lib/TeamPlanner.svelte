@@ -11,6 +11,13 @@
 		playerStatsById: Record<number, { gamesPlayed: number; wins: number }>;
 	};
 
+	export type PlayerFrequency = {
+		player: Player;
+		count: number;
+		gamesPlayed: number;
+		score: number;
+	};
+
 	let { players, playerStatsById }: TeamPlannerProps = $props();
 
 	const COINS_BUDGET = 150;
@@ -208,6 +215,50 @@
 		}
 
 		return sortedCombinationResults.slice(0, MAX_VISIBLE_COMBINATIONS);
+	});
+
+	const topPlayersByGender = $derived.by(() => {
+		if (filteredCombinationResults === null || filteredCombinationResults.length === 0) {
+			return null;
+		}
+
+		const countsById = new Map<number, number>();
+
+		for (const combination of filteredCombinationResults) {
+			for (const player of combination.addedPlayers) {
+				countsById.set(player.id, (countsById.get(player.id) ?? 0) + 1);
+			}
+		}
+
+		const frequencies: PlayerFrequency[] = [...countsById.entries()]
+			.map(([playerId, count]) => {
+				const player = players.find((candidate) => candidate.id === playerId);
+
+				if (!player) {
+					return null;
+				}
+
+				const gamesPlayed = playerStatsById[player.id]?.gamesPlayed ?? 0;
+				// Games played acts as a multiplier bonus (+1 so a combo-frequent player with
+				// 0 games recorded yet doesn't get zeroed out) rather than a tiebreaker, so a
+				// well-tested player with fewer combo appearances can still outrank one with
+				// more appearances but no games under their belt.
+				const score = count * (gamesPlayed + 1);
+
+				return { player, count, gamesPlayed, score };
+			})
+			.filter((entry): entry is PlayerFrequency => entry !== null);
+
+		const topByGender = (gender: Gender) =>
+			frequencies
+				.filter((entry) => entry.player.gender === gender)
+				.sort((a, b) => b.score - a.score)
+				.slice(0, 5);
+
+		return {
+			women: topByGender(Gender.Female),
+			men: topByGender(Gender.Male)
+		};
 	});
 
 	$effect(() => {
@@ -441,6 +492,7 @@
 			maxComboRemainingBudget={MAX_COMBO_REMAINING_BUDGET}
 			filteredCombinationResults={visibleCombinationResults}
 			totalCombinationCount={sortedCombinationResults?.length ?? null}
+			{topPlayersByGender}
 			{playerStatsById}
 			onClearExcludedPlayers={clearExcludedPlayers}
 			onSearchTeamCombinations={searchTeamCombinations}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { TeamCombinationResult } from './combinationSearch';
+	import type { PlayerFrequency } from './TeamPlanner.svelte';
 
 	type TeamCombinationsPanelProps = {
 		teamLength: number;
@@ -11,6 +12,7 @@
 		maxComboRemainingBudget: number;
 		filteredCombinationResults: TeamCombinationResult[] | null;
 		totalCombinationCount: number | null;
+		topPlayersByGender: { women: PlayerFrequency[]; men: PlayerFrequency[] } | null;
 		playerStatsById: Record<number, { gamesPlayed: number; wins: number }>;
 		onClearExcludedPlayers: () => void;
 		onSearchTeamCombinations: () => void;
@@ -28,6 +30,7 @@
 		maxComboRemainingBudget,
 		filteredCombinationResults,
 		totalCombinationCount,
+		topPlayersByGender,
 		playerStatsById,
 		onClearExcludedPlayers,
 		onSearchTeamCombinations,
@@ -136,6 +139,41 @@
 			Kombis finden
 		</button>
 	</div>
+
+	{#if topPlayersByGender}
+		<div class="mb-4 grid grid-cols-2 gap-3">
+			<div class="rounded-lg border border-amber-100 bg-amber-50/60 p-3">
+				<h4 class="mb-2 text-xs font-bold uppercase tracking-wide text-stone-600">
+					Top 5 Frauen
+				</h4>
+				<ol class="space-y-1">
+					{#each topPlayersByGender.women as entry (entry.player.id)}
+						<li class="flex items-center justify-between gap-2 text-sm text-stone-700">
+							<span class="truncate">{entry.player.firstName} {entry.player.lastName}</span>
+							<span class="shrink-0 font-semibold text-amber-900"
+								>{entry.count}x · {entry.gamesPlayed} Sp.</span
+							>
+						</li>
+					{/each}
+				</ol>
+			</div>
+			<div class="rounded-lg border border-amber-100 bg-amber-50/60 p-3">
+				<h4 class="mb-2 text-xs font-bold uppercase tracking-wide text-stone-600">
+					Top 5 Männer
+				</h4>
+				<ol class="space-y-1">
+					{#each topPlayersByGender.men as entry (entry.player.id)}
+						<li class="flex items-center justify-between gap-2 text-sm text-stone-700">
+							<span class="truncate">{entry.player.firstName} {entry.player.lastName}</span>
+							<span class="shrink-0 font-semibold text-amber-900"
+								>{entry.count}x · {entry.gamesPlayed} Sp.</span
+							>
+						</li>
+					{/each}
+				</ol>
+			</div>
+		</div>
+	{/if}
 
 	{#if teamLength >= maxTeamSize}
 		<p class="text-sm text-stone-500">Dein Team ist bereits voll.</p>

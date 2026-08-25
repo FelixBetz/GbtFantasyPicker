@@ -24,6 +24,12 @@
 		onAddPlayer,
 		onToggleExcluded
 	}: TeamPlayerListProps = $props();
+
+	function dvvProfileUrl(player: Player): string | null {
+		return player.licenseNumber !== null
+			? `https://beach.volleyball-verband.de/public/spieler.php?id=${player.licenseNumber}`
+			: null;
+	}
 </script>
 
 <section class="rounded-xl border border-amber-100 bg-white p-4 shadow-sm">
@@ -81,19 +87,32 @@
 						</p>
 					</button>
 
-					<button
-						type="button"
-						onclick={() => onToggleExcluded(player.id)}
-						disabled={isPlayerInTeam(player.id)}
-						class={`mt-1 rounded-md border px-2 py-1 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
-							isPlayerExcluded(player.id)
-								? 'border-rose-400 bg-rose-100 text-rose-800'
-								: 'border-stone-300 bg-white text-stone-700 hover:bg-stone-100'
-						}`}
-						title="Spieler für Kombi-Suche ausschließen"
-					>
-						X
-					</button>
+					<div class="flex flex-col items-end gap-1">
+						{#if dvvProfileUrl(player)}
+							<a
+								href={dvvProfileUrl(player)}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="rounded-md border border-sky-300 bg-white px-2 py-1 text-xs font-bold text-sky-700 transition hover:bg-sky-50"
+								title="DVV-Profil in neuem Tab öffnen"
+							>
+								DVV ↗
+							</a>
+						{/if}
+						<button
+							type="button"
+							onclick={() => onToggleExcluded(player.id)}
+							disabled={isPlayerInTeam(player.id)}
+							class={`rounded-md border px-2 py-1 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
+								isPlayerExcluded(player.id)
+									? 'border-rose-400 bg-rose-100 text-rose-800'
+									: 'border-stone-300 bg-white text-stone-700 hover:bg-stone-100'
+							}`}
+							title="Spieler für Kombi-Suche ausschließen"
+						>
+							X
+						</button>
+					</div>
 				</div>
 			</li>
 		{/each}

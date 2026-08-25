@@ -392,6 +392,22 @@
 			.filter((player): player is Player => player !== undefined);
 	}
 
+	function getSlotDvvTeamId(slotPlayers: Player[] | null): number | null {
+		if (!slotPlayers) {
+			return null;
+		}
+
+		return slotPlayers.find((player) => player.dvvTeamId !== null)?.dvvTeamId ?? null;
+	}
+
+	function getHead2HeadUrl(teamADvvId: number | null, teamBDvvId: number | null): string | null {
+		if (teamADvvId === null || teamBDvvId === null) {
+			return null;
+		}
+
+		return `https://beach.volleyball-verband.de/public/teamhead2head.php?teamaid=${teamADvvId}&teambid=${teamBDvvId}&teamauv=on&teambuv=on`;
+	}
+
 	function normalizeWinners(matches: MatchState[]): MatchState[] {
 		const normalized = matches.map((match) => ({ ...match }));
 
@@ -876,6 +892,10 @@
 					{@const teamBSeed = getSlotSeed(match.teamBRef, currentMatches, currentTeams)}
 					{@const teamAPlayers = getSlotPlayers(match.teamARef, currentMatches, currentTeams)}
 					{@const teamBPlayers = getSlotPlayers(match.teamBRef, currentMatches, currentTeams)}
+					{@const head2HeadUrl = getHead2HeadUrl(
+						getSlotDvvTeamId(teamAPlayers),
+						getSlotDvvTeamId(teamBPlayers)
+					)}
 					<div class={`match-wrap ${match.isFinal ? 'final-wrap' : ''}`}>
 						{#if match.isFinal}
 							<div class="final-icon">🏆</div>
@@ -888,7 +908,20 @@
 										- {match.title}
 									{/if}
 								</p>
-								<p>{match.time}</p>
+								<p class="match-head-right">
+									{match.time}
+									{#if head2HeadUrl}
+										<a
+											href={head2HeadUrl}
+											target="_blank"
+											rel="noopener noreferrer"
+											class="head2head-link"
+											title="Head-to-Head Vergleich (DVV)"
+										>
+											⚔
+										</a>
+									{/if}
+								</p>
 							</div>
 							<button
 								type="button"
@@ -1052,6 +1085,22 @@
 		font-size: 0.78rem;
 		font-weight: 700;
 		color: #30506b;
+	}
+
+	.match-head-right {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+	}
+
+	.head2head-link {
+		line-height: 1;
+		color: #b45309;
+		text-decoration: none;
+	}
+
+	.head2head-link:hover {
+		color: #92400e;
 	}
 
 	.team-row {

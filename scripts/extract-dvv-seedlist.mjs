@@ -21,8 +21,10 @@ Behavior:
   - If path is tur-ml.php, it is normalized to tur-sl.php (setzliste).
 
 Flags:
-  --json     Print JSON only.
-  --svelte   Print Svelte Player lines only.
+  --json     Print JSON only (read-only, never writes a file unless --write
+             is also given).
+  --svelte   Print Svelte Player lines only (writes the file by default,
+             same as a bare call).
   --write    Write extracted players into a TypeScript file.
              Optional path: --write=src/data/players.generated.ts
   --write-file <path>
@@ -88,11 +90,11 @@ function parseArgs(argv) {
     writeToFile = npmWriteFileFlag.trim();
   }
 
-  if (!writeToFile && mode === 'svelte') {
-    writeToFile = DEFAULT_OUTPUT_FILE;
-  }
-
-  if (!writeToFile) {
+  // Bare calls and --svelte default to writing (that's the tool's main purpose),
+  // but --json is a read-only inspection mode and must never write unless asked
+  // explicitly via --write/--write-file - it silently clobbered hand-edited coins
+  // in players.generated.ts once already.
+  if (!writeToFile && (mode === 'svelte' || mode === 'summary')) {
     writeToFile = DEFAULT_OUTPUT_FILE;
   }
 
@@ -323,6 +325,26 @@ function extractTeamPlayers(teamHtml, teamUrl, teamLabel) {
   return players;
 }
 
+function parseIdFromUrl(url) {
+  const value = new URL(url).searchParams.get('id');
+  const id = value ? Number(value) : NaN;
+  return Number.isInteger(id) ? id : null;
+}
+
+function parseLicenseNumber(profileHtml) {
+  const match = profileHtml.match(/<td class="bez">\s*Lizenznummer\s*<\/td>\s*<td>\s*(\d+)\s*<\/td>/i);
+  return match ? Number(match[1]) : null;
+}
+
+async function fetchLicenseNumber(profileUrl) {
+  if (!profileUrl) {
+    return null;
+  }
+
+  const profileHtml = await fetchText(profileUrl);
+  return parseLicenseNumber(profileHtml);
+}
+
 function detectBracketVariant(teamCount) {
   return teamCount >= 16 ? 'gbc-final' : 'tourstop';
 }
@@ -337,8 +359,10 @@ function toSveltePlayerLines(genderLabel, teams) {
 
   for (const team of teams) {
     for (const player of team.players) {
+      const licenseNumberLiteral = Number.isInteger(player.licenseNumber) ? player.licenseNumber : 'null';
+      const dvvTeamIdLiteral = Number.isInteger(player.dvvTeamId) ? player.dvvTeamId : 'null';
       lines.push(
-        `new Player(Gender.${svelteGender}, '${escapeSingleQuoted(player.firstName)}', '${escapeSingleQuoted(player.lastName)}', 0),`
+        `new Player(Gender.${svelteGender}, '${escapeSingleQuoted(player.firstName)}', '${escapeSingleQuoted(player.lastName)}', 0, ${licenseNumberLiteral}, ${dvvTeamIdLiteral}),`
       );
     }
   }
@@ -386,6 +410,12 @@ async function extractTournament(listUrl, label) {
   for (const team of teams) {
     const teamHtml = await fetchText(team.teamUrl);
     const players = extractTeamPlayers(teamHtml, team.teamUrl, team.teamLabel);
+    const dvvTeamId = parseIdFromUrl(team.teamUrl);
+
+    for (const player of players) {
+      player.licenseNumber = await fetchLicenseNumber(player.profileUrl);
+      player.dvvTeamId = dvvTeamId;
+    }
 
     enrichedTeams.push({
       seed: team.seed,

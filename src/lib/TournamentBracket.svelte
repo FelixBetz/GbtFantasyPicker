@@ -620,6 +620,7 @@
 	let womenMatches = $state<MatchState[]>([]);
 	let activeBracket = $state<BracketKind>('men');
 	let hasLoadedStoredResults = $state(false);
+	let hoveredTeamId = $state<number | null>(null);
 
 	onMount(() => {
 		menMatches = restoreMatches(menVariant, 'men');
@@ -718,6 +719,8 @@
 					{#each column.gameIds as gameId, index (gameId)}
 						{@const match = getMatchByGame(currentMatches, gameId)}
 						{#if match}
+							{@const teamASeed = getSlotSeed(match.teamARef, currentMatches, currentTeams)}
+							{@const teamBSeed = getSlotSeed(match.teamBRef, currentMatches, currentTeams)}
 							<div class={`match-wrap ${column.matchWrapClasses?.[index] ?? ''} ${match.isFinal ? 'final-wrap' : ''}`}>
 								{#if match.isFinal}
 									<div class="final-icon">🏆</div>
@@ -735,22 +738,26 @@
 									<button
 										type="button"
 										onclick={() => handleTeamClick(match, match.teamARef)}
+										onmouseenter={() => (hoveredTeamId = teamASeed)}
+										onmouseleave={() => (hoveredTeamId = null)}
 										disabled={!canSelectTeam(match.teamARef, currentMatches)}
-										class={`team-row team-button ${isWinner(match, match.teamARef, currentMatches) ? 'team-row-winner' : ''}`}
+										class={`team-row team-button ${isWinner(match, match.teamARef, currentMatches) ? 'team-row-winner' : ''} ${teamASeed !== null && teamASeed === hoveredTeamId ? 'team-row-highlighted' : ''}`}
 									>
-										{#if getSlotSeed(match.teamARef, currentMatches, currentTeams) !== null}
-											<span class="team-seed">{getSlotSeed(match.teamARef, currentMatches, currentTeams)}</span>
+										{#if teamASeed !== null}
+											<span class="team-seed">{teamASeed}</span>
 										{/if}
 										{getSlotLabel(match.teamARef, currentMatches, currentTeams)}
 									</button>
 									<button
 										type="button"
 										onclick={() => handleTeamClick(match, match.teamBRef)}
+										onmouseenter={() => (hoveredTeamId = teamBSeed)}
+										onmouseleave={() => (hoveredTeamId = null)}
 										disabled={!canSelectTeam(match.teamBRef, currentMatches)}
-										class={`team-row team-button ${isWinner(match, match.teamBRef, currentMatches) ? 'team-row-winner' : ''}`}
+										class={`team-row team-button ${isWinner(match, match.teamBRef, currentMatches) ? 'team-row-winner' : ''} ${teamBSeed !== null && teamBSeed === hoveredTeamId ? 'team-row-highlighted' : ''}`}
 									>
-										{#if getSlotSeed(match.teamBRef, currentMatches, currentTeams) !== null}
-											<span class="team-seed">{getSlotSeed(match.teamBRef, currentMatches, currentTeams)}</span>
+										{#if teamBSeed !== null}
+											<span class="team-seed">{teamBSeed}</span>
 										{/if}
 										{getSlotLabel(match.teamBRef, currentMatches, currentTeams)}
 									</button>
@@ -861,6 +868,12 @@
 		background: #d9fbe7;
 		color: #0a6136;
 		font-weight: 700;
+	}
+
+	.team-row-highlighted {
+		border-color: #e11d48;
+		background: #ffe1e6;
+		box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.55);
 	}
 
 	.connector {

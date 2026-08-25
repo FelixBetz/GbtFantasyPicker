@@ -12,7 +12,7 @@
 		maxComboRemainingBudget: number;
 		filteredCombinationResults: TeamCombinationResult[] | null;
 		totalCombinationCount: number | null;
-		topPlayersByGender: { women: PlayerFrequency[]; men: PlayerFrequency[] } | null;
+		availablePlayersByGender: { women: PlayerFrequency[]; men: PlayerFrequency[] } | null;
 		playerStatsById: Record<number, { gamesPlayed: number; wins: number }>;
 		onClearExcludedPlayers: () => void;
 		onSearchTeamCombinations: () => void;
@@ -30,7 +30,7 @@
 		maxComboRemainingBudget,
 		filteredCombinationResults,
 		totalCombinationCount,
-		topPlayersByGender,
+		availablePlayersByGender,
 		playerStatsById,
 		onClearExcludedPlayers,
 		onSearchTeamCombinations,
@@ -140,16 +140,16 @@
 		</button>
 	</div>
 
-	{#if topPlayersByGender}
+	{#if availablePlayersByGender}
 		<div class="mb-4 space-y-3">
 			<div class="rounded-lg border border-amber-100 bg-amber-50/60 p-3">
 				<h4 class="mb-2 text-xs font-bold uppercase tracking-wide text-stone-600">
-					Top 5 Frauen
+					Frauen ({availablePlayersByGender.women.length})
 				</h4>
-				<ol class="space-y-1.5">
-					{#each topPlayersByGender.women as entry, index (entry.player.id)}
+				<ol class="max-h-64 space-y-1.5 overflow-y-auto pr-1">
+					{#each availablePlayersByGender.women as entry, index (entry.player.id)}
 						<li class="flex items-center gap-2 text-sm text-stone-700">
-							<span class="w-4 shrink-0 text-xs font-semibold text-stone-400">{index + 1}.</span>
+							<span class="w-6 shrink-0 text-xs font-semibold text-stone-400">{index + 1}.</span>
 							<span class="min-w-0 flex-1 break-words"
 								>{entry.player.firstName} {entry.player.lastName}</span
 							>
@@ -162,12 +162,12 @@
 			</div>
 			<div class="rounded-lg border border-amber-100 bg-amber-50/60 p-3">
 				<h4 class="mb-2 text-xs font-bold uppercase tracking-wide text-stone-600">
-					Top 5 Männer
+					Männer ({availablePlayersByGender.men.length})
 				</h4>
-				<ol class="space-y-1.5">
-					{#each topPlayersByGender.men as entry, index (entry.player.id)}
+				<ol class="max-h-64 space-y-1.5 overflow-y-auto pr-1">
+					{#each availablePlayersByGender.men as entry, index (entry.player.id)}
 						<li class="flex items-center gap-2 text-sm text-stone-700">
-							<span class="w-4 shrink-0 text-xs font-semibold text-stone-400">{index + 1}.</span>
+							<span class="w-6 shrink-0 text-xs font-semibold text-stone-400">{index + 1}.</span>
 							<span class="min-w-0 flex-1 break-words"
 								>{entry.player.firstName} {entry.player.lastName}</span
 							>

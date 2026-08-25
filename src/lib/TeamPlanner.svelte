@@ -217,15 +217,30 @@
 		return sortedCombinationResults.slice(0, MAX_VISIBLE_COMBINATIONS);
 	});
 
-	const topPlayersByGender = $derived.by(() => {
-		if (filteredCombinationResults === null || filteredCombinationResults.length === 0) {
+	const availablePlayersByGender = $derived.by(() => {
+		if (filteredCombinationResults === null) {
 			return null;
 		}
 
+		const excludedIds = new Set(excludedPlayerIds);
+		const teamIds = new Set(team.map((teamPlayer) => teamPlayer.id));
+
+		// Every player still eligible for a slot starts at 0, not just the ones that
+		// happened to show up in a found combination - a player too expensive to fit
+		// even once should still be listed, just ranked at the bottom.
 		const countsById = new Map<number, number>();
+		for (const player of players) {
+			if (!teamIds.has(player.id) && !excludedIds.has(player.id)) {
+				countsById.set(player.id, 0);
+			}
+		}
 
 		for (const combination of filteredCombinationResults) {
 			for (const player of combination.addedPlayers) {
+				if (!countsById.has(player.id)) {
+					continue;
+				}
+
 				countsById.set(player.id, (countsById.get(player.id) ?? 0) + 1);
 			}
 		}
@@ -249,15 +264,12 @@
 			})
 			.filter((entry): entry is PlayerFrequency => entry !== null);
 
-		const topByGender = (gender: Gender) =>
-			frequencies
-				.filter((entry) => entry.player.gender === gender)
-				.sort((a, b) => b.score - a.score)
-				.slice(0, 5);
+		const rankedByGender = (gender: Gender) =>
+			frequencies.filter((entry) => entry.player.gender === gender).sort((a, b) => b.score - a.score);
 
 		return {
-			women: topByGender(Gender.Female),
-			men: topByGender(Gender.Male)
+			women: rankedByGender(Gender.Female),
+			men: rankedByGender(Gender.Male)
 		};
 	});
 
@@ -492,7 +504,7 @@
 			maxComboRemainingBudget={MAX_COMBO_REMAINING_BUDGET}
 			filteredCombinationResults={visibleCombinationResults}
 			totalCombinationCount={sortedCombinationResults?.length ?? null}
-			{topPlayersByGender}
+			{availablePlayersByGender}
 			{playerStatsById}
 			onClearExcludedPlayers={clearExcludedPlayers}
 			onSearchTeamCombinations={searchTeamCombinations}

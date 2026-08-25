@@ -36,14 +36,14 @@
 
 	type BracketColumn = {
 		title: string;
-		gameIds: number[];
-		containerClass: string;
-		matchWrapClasses?: string[];
+		// A plain number renders as its own centered slot; a nested array groups
+		// several games into one tightly-spaced unit (e.g. Finale + kl. Finale)
+		// so the group as a whole gets centered instead of each game separately.
+		gameIds: (number | number[])[];
 	};
 
 	type BracketLayout = {
 		teamCount: number;
-		minWidth: string;
 		columns: BracketColumn[];
 		matches: MatchSeed[];
 	};
@@ -77,18 +77,12 @@
 	const BRACKET_LAYOUTS: Record<BracketVariant, BracketLayout> = {
 		tourstop: {
 			teamCount: 8,
-			minWidth: '1160px',
 			columns: [
-				{
-					title: 'Achtelfinale Winner',
-					gameIds: [1, 2, 3, 4],
-					containerClass: 'space-y-4',
-					matchWrapClasses: ['', '', 'mt-24', 'mt-24']
-				},
-				{ title: 'Viertelfinale Winner', gameIds: [7, 8], containerClass: 'space-y-40 pt-10' },
-				{ title: 'Halbfinale & Finale', gameIds: [11, 13, 12], containerClass: 'space-y-8 pt-12' },
-				{ title: 'Viertelfinale Loser', gameIds: [9, 10], containerClass: 'space-y-40 pt-10' },
-				{ title: 'Achtelfinale Loser', gameIds: [5, 6], containerClass: 'space-y-40 pt-2' }
+				{ title: 'Achtelfinale Winner', gameIds: [1, 2, 3, 4] },
+				{ title: 'Viertelfinale Winner', gameIds: [7, 8] },
+				{ title: 'Halbfinale & Finale', gameIds: [11, 13, 12] },
+				{ title: 'Viertelfinale Loser', gameIds: [9, 10] },
+				{ title: 'Achtelfinale Loser', gameIds: [5, 6] }
 			],
 			matches: [
 				{ game: 1, time: 'Fr, 20:30', teamARef: { kind: 'team', teamId: 1 }, teamBRef: { kind: 'team', teamId: 8 } },
@@ -108,17 +102,16 @@
 		},
 		'gbc-final': {
 			teamCount: 16,
-			minWidth: '2120px',
 			columns: [
-				{ title: 'Runde 1 Winner', gameIds: [1, 2, 3, 4, 5, 6, 7, 8], containerClass: 'space-y-4' },
-				{ title: 'Achtelfinale Winner', gameIds: [9, 10, 11, 12], containerClass: 'space-y-28 pt-10' },
-				{ title: 'Viertelfinale Winner', gameIds: [21, 22, 23, 24], containerClass: 'space-y-32 pt-12' },
-				{ title: 'Halbfinale', gameIds: [27, 28], containerClass: 'space-y-24 pt-16' },
-				{ title: 'Finale', gameIds: [30], containerClass: 'pt-24' },
-				{ title: 'Runde 1 Loser', gameIds: [13, 14, 15, 16], containerClass: 'space-y-28 pt-10' },
-				{ title: 'Runde 2 Loser', gameIds: [17, 18, 19, 20], containerClass: 'space-y-24 pt-10' },
-				{ title: 'Achtelfinale Loser', gameIds: [25, 26], containerClass: 'space-y-24 pt-14' },
-				{ title: 'Viertelfinale Loser', gameIds: [29], containerClass: 'pt-20' }
+				{ title: 'Runde 1 Winner', gameIds: [1, 2, 3, 4, 5, 6, 7, 8] },
+				{ title: 'Achtelfinale Winner', gameIds: [9, 10, 11, 12] },
+				{ title: 'Viertelfinale Winner', gameIds: [21, 22] },
+				{ title: 'Halbfinale', gameIds: [27, 28] },
+				{ title: 'Finale', gameIds: [[30, 29]] },
+				{ title: 'Viertelfinale Loser', gameIds: [25, 26] },
+				{ title: 'Achtelfinale Loser', gameIds: [24, 23] },
+				{ title: 'Runde 2 Loser', gameIds: [20, 19, 18, 17] },
+				{ title: 'Runde 1 Loser', gameIds: [16, 15, 14, 13] }
 			],
 			matches: [
 				{ game: 1, time: 'Do, 12:30', teamARef: { kind: 'team', teamId: 1 }, teamBRef: { kind: 'team', teamId: 16 } },
@@ -147,10 +140,10 @@
 				{ game: 24, time: 'Sa, 12:30', teamARef: { kind: 'winner', game: 20 }, teamBRef: { kind: 'winner', game: 19 } },
 				{ game: 25, time: 'Sa, 18:00', teamARef: { kind: 'winner', game: 24 }, teamBRef: { kind: 'loser', game: 22 } },
 				{ game: 26, time: 'Sa, 19:00', teamARef: { kind: 'winner', game: 23 }, teamBRef: { kind: 'loser', game: 21 } },
-				{ game: 27, time: 'So, 10:30', teamARef: { kind: 'winner', game: 21 }, teamBRef: { kind: 'winner', game: 25 } },
+				{ game: 27, time: 'So, 10:30', teamARef: { kind: 'winner', game: 25 }, teamBRef: { kind: 'winner', game: 21 } },
 				{ game: 28, time: 'So, 11:30', teamARef: { kind: 'winner', game: 22 }, teamBRef: { kind: 'winner', game: 26 } },
-				{ game: 29, time: 'So, 15:00', teamARef: { kind: 'loser', game: 27 }, teamBRef: { kind: 'loser', game: 28 }, title: 'kl. Finale' },
-				{ game: 30, time: 'So, 16:00', teamARef: { kind: 'winner', game: 27 }, teamBRef: { kind: 'winner', game: 28 }, title: 'FINALE', isFinal: true }
+				{ game: 29, time: 'So, 15:00', teamARef: { kind: 'loser', game: 27 }, teamBRef: { kind: 'loser', game: 28 } },
+				{ game: 30, time: 'So, 16:00', teamARef: { kind: 'winner', game: 27 }, teamBRef: { kind: 'winner', game: 28 }, isFinal: true }
 			]
 		}
 	};
@@ -632,11 +625,155 @@
 	let hasLoadedStoredResults = $state(false);
 	let hoveredTeamId = $state<number | null>(null);
 
+	// Connector lines: real drawn paths from each match to the exact game it feeds
+	// into, since a game's result can feed a match several columns away (loser-bracket
+	// games routinely skip over the winner-side columns) - a plain "<-"/"->" glyph can't
+	// express that distance, only a real line can.
+	type ConnectorPath = { key: string; d: string };
+
+	const rowRefs = new Map<string, HTMLElement>();
+	let gridEl = $state<HTMLElement | null>(null);
+	let connectorPaths = $state<ConnectorPath[]>([]);
+	let recomputeScheduled = false;
+
+	// Which games belong to the loser (consolation) bracket, for connector-line
+	// filtering. Kept independent of the visual `columns` grouping above - game 29
+	// (kl. Finale) is drawn stacked under "Finale" for layout reasons, but it's still
+	// a loser-bracket game and must not gain a cross-side line because of that.
+	const LOSER_SIDE_GAMES: Record<BracketVariant, ReadonlySet<number>> = {
+		tourstop: new Set([5, 6, 9, 10]),
+		'gbc-final': new Set([13, 14, 15, 16, 17, 18, 19, 20, 23, 24, 25, 26, 29])
+	};
+
+	function isLoserSideGame(variant: BracketVariant, game: number): boolean {
+		return LOSER_SIDE_GAMES[variant].has(game);
+	}
+
+	function scheduleConnectorRecompute() {
+		if (recomputeScheduled) {
+			return;
+		}
+
+		recomputeScheduled = true;
+		requestAnimationFrame(() => {
+			recomputeScheduled = false;
+			recomputeConnectorPaths();
+		});
+	}
+
+	function registerTeamRow(node: HTMLElement, key: string) {
+		rowRefs.set(key, node);
+		scheduleConnectorRecompute();
+
+		return {
+			destroy() {
+				if (rowRefs.get(key) === node) {
+					rowRefs.delete(key);
+				}
+			}
+		};
+	}
+
+	function recomputeConnectorPaths() {
+		if (!gridEl) {
+			connectorPaths = [];
+			return;
+		}
+
+		const gridRect = gridEl.getBoundingClientRect();
+		const paths: ConnectorPath[] = [];
+
+		for (const match of currentMatches) {
+			for (const [ref, rowSuffix] of [
+				[match.teamARef, 'A'],
+				[match.teamBRef, 'B']
+			] as const) {
+				if (ref.kind === 'team') {
+					continue;
+				}
+
+				// Skip only the "you lost, here's your consolation-bracket drop" lines
+				// (a "loser" edge whose source sits on the Winner side) - those jumps
+				// span most of the bracket's width and the box text already spells out
+				// the source game ("Verlierer Spiel X"), so nothing is lost by leaving
+				// them out. Keep "winner" edges even when they cross sides, e.g.
+				// Spiel 25/26 -> Spiel 27/28 - that's the consolation-bracket champion
+				// advancing, which is worth tracing.
+				if (
+					ref.kind === 'loser' &&
+					isLoserSideGame(currentVariant, ref.game) !== isLoserSideGame(currentVariant, match.game)
+				) {
+					continue;
+				}
+
+				// Anchor the source at the true midpoint between the source match's two
+				// team rows - not the whole card's center, which skews toward row A
+				// (the match-head eats space above the rows) and can end up almost on
+				// top of a sibling edge that arrives right at row A.
+				const sourceRowA = rowRefs.get(`${ref.game}-A`);
+				const sourceRowB = rowRefs.get(`${ref.game}-B`);
+				const destEl = rowRefs.get(`${match.game}-${rowSuffix}`);
+
+				if (!sourceRowA || !sourceRowB || !destEl) {
+					continue;
+				}
+
+				const sRectA = sourceRowA.getBoundingClientRect();
+				const sRectB = sourceRowB.getBoundingClientRect();
+				const sLeft = Math.min(sRectA.left, sRectB.left);
+				const sRight = Math.max(sRectA.right, sRectB.right);
+				const sCenterY = (sRectA.top + sRectA.height / 2 + sRectB.top + sRectB.height / 2) / 2;
+				const dRect = destEl.getBoundingClientRect();
+				const sCenterX = (sLeft + sRight) / 2 - gridRect.left;
+				const dCenterX = dRect.left + dRect.width / 2 - gridRect.left;
+				const goingRight = dCenterX >= sCenterX;
+
+				const sx = (goingRight ? sRight : sLeft) - gridRect.left;
+				const sy = sCenterY - gridRect.top;
+				const dx = (goingRight ? dRect.left : dRect.right) - gridRect.left;
+				const dy = dRect.top + dRect.height / 2 - gridRect.top;
+				const midX = (sx + dx) / 2;
+
+				paths.push({
+					key: `${ref.kind}-${ref.game}-${match.game}-${rowSuffix}`,
+					d: `M ${sx} ${sy} L ${midX} ${sy} L ${midX} ${dy} L ${dx} ${dy}`
+				});
+			}
+		}
+
+		connectorPaths = paths;
+	}
+
 	onMount(() => {
 		menMatches = restoreMatches(menVariant, 'men');
 		womenMatches = restoreMatches(womenVariant, 'women');
 
 		hasLoadedStoredResults = true;
+
+		window.addEventListener('resize', scheduleConnectorRecompute);
+
+		// The bracket stays mounted (just hidden) while another tab is active, so a
+		// resize-only listener misses the moment it becomes visible again - going from
+		// display:none to visible is exactly a size change from 0x0, which this catches.
+		const resizeObserver = new ResizeObserver(() => scheduleConnectorRecompute());
+
+		if (gridEl) {
+			resizeObserver.observe(gridEl);
+		}
+
+		return () => {
+			window.removeEventListener('resize', scheduleConnectorRecompute);
+			resizeObserver.disconnect();
+		};
+	});
+
+	$effect(() => {
+		// Re-measure whenever the visible bracket, its results, or its layout variant
+		// change - box positions shift as winners get filled in and rows resize.
+		void activeBracket;
+		void currentMatches;
+		void activeLayout;
+		scheduleConnectorRecompute();
 	});
 
 	$effect(() => {
@@ -722,84 +859,106 @@
 	<div
 		class="bracket-surface overflow-x-auto rounded-2xl border border-slate-700 p-3 shadow-2xl sm:p-4"
 	>
-		<div class="bracket-grid gap-4" style={`--bracket-columns: ${activeLayout.columns.length}; min-width: ${activeLayout.minWidth};`}>
-			{#each activeLayout.columns as column}
-				<div class={column.containerClass}>
-					<h2 class="bracket-column-title">{column.title}</h2>
-					{#each column.gameIds as gameId, index (gameId)}
-						{@const match = getMatchByGame(currentMatches, gameId)}
-						{#if match}
-							{@const teamASeed = getSlotSeed(match.teamARef, currentMatches, currentTeams)}
-							{@const teamBSeed = getSlotSeed(match.teamBRef, currentMatches, currentTeams)}
-							{@const teamAPlayers = getSlotPlayers(match.teamARef, currentMatches, currentTeams)}
-							{@const teamBPlayers = getSlotPlayers(match.teamBRef, currentMatches, currentTeams)}
-							<div class={`match-wrap ${column.matchWrapClasses?.[index] ?? ''} ${match.isFinal ? 'final-wrap' : ''}`}>
-								{#if match.isFinal}
-									<div class="final-icon">🏆</div>
-								{/if}
-								<div class={`match-card ${match.isFinal ? 'final-card' : ''}`}>
-									<div class="match-head">
-										<p>
-											Spiel {match.game}
-											{#if match.title}
-												- {match.title}
-											{/if}
-										</p>
-										<p>{match.time}</p>
-									</div>
-									<button
-										type="button"
-										onclick={() => handleTeamClick(match, match.teamARef)}
-										onmouseenter={() => (hoveredTeamId = teamASeed)}
-										onmouseleave={() => (hoveredTeamId = null)}
-										disabled={!canSelectTeam(match.teamARef, currentMatches)}
-										class={`team-row team-button ${isWinner(match, match.teamARef, currentMatches) ? 'team-row-winner' : ''} ${teamASeed !== null && teamASeed === hoveredTeamId ? 'team-row-highlighted' : ''}`}
-									>
-										{#if teamASeed !== null}
-											<span class="team-seed">{teamASeed}</span>
-										{/if}
-										{#if teamAPlayers}
-											{#each teamAPlayers as player, i (player.id)}
-												{i > 0 ? ' / ' : ''}<span
-													class={pickedPlayerIdSet.has(player.id) ? 'picked-name' : ''}
-													title={pickedPlayerIdSet.has(player.id) ? 'Spieler in deinem Team' : undefined}
-													>{toBracketName(player)}</span
-												>
-											{/each}
-										{:else}
-											{getFallbackLabel(match.teamARef)}
-										{/if}
-									</button>
-									<button
-										type="button"
-										onclick={() => handleTeamClick(match, match.teamBRef)}
-										onmouseenter={() => (hoveredTeamId = teamBSeed)}
-										onmouseleave={() => (hoveredTeamId = null)}
-										disabled={!canSelectTeam(match.teamBRef, currentMatches)}
-										class={`team-row team-button ${isWinner(match, match.teamBRef, currentMatches) ? 'team-row-winner' : ''} ${teamBSeed !== null && teamBSeed === hoveredTeamId ? 'team-row-highlighted' : ''}`}
-									>
-										{#if teamBSeed !== null}
-											<span class="team-seed">{teamBSeed}</span>
-										{/if}
-										{#if teamBPlayers}
-											{#each teamBPlayers as player, i (player.id)}
-												{i > 0 ? ' / ' : ''}<span
-													class={pickedPlayerIdSet.has(player.id) ? 'picked-name' : ''}
-													title={pickedPlayerIdSet.has(player.id) ? 'Spieler in deinem Team' : undefined}
-													>{toBracketName(player)}</span
-												>
-											{/each}
-										{:else}
-											{getFallbackLabel(match.teamBRef)}
-										{/if}
-									</button>
-									<span class={`connector ${column.title.includes('Loser') ? 'connector-left' : 'connector-right'}`}>
-										{column.title.includes('Loser') ? '←' : '→'}
-									</span>
-								</div>
-							</div>
+		<div
+			class="bracket-grid gap-8"
+			style={`--bracket-columns: ${activeLayout.columns.length};`}
+			bind:this={gridEl}
+		>
+			<svg class="connector-lines">
+				{#each connectorPaths as path (path.key)}
+					<path d={path.d} />
+				{/each}
+			</svg>
+			{#snippet matchCard(gameId: number)}
+				{@const match = getMatchByGame(currentMatches, gameId)}
+				{#if match}
+					{@const teamASeed = getSlotSeed(match.teamARef, currentMatches, currentTeams)}
+					{@const teamBSeed = getSlotSeed(match.teamBRef, currentMatches, currentTeams)}
+					{@const teamAPlayers = getSlotPlayers(match.teamARef, currentMatches, currentTeams)}
+					{@const teamBPlayers = getSlotPlayers(match.teamBRef, currentMatches, currentTeams)}
+					<div class={`match-wrap ${match.isFinal ? 'final-wrap' : ''}`}>
+						{#if match.isFinal}
+							<div class="final-icon">🏆</div>
 						{/if}
-					{/each}
+						<div class={`match-card ${match.isFinal ? 'final-card' : ''}`}>
+							<div class="match-head">
+								<p>
+									Spiel {match.game}
+									{#if match.title}
+										- {match.title}
+									{/if}
+								</p>
+								<p>{match.time}</p>
+							</div>
+							<button
+								type="button"
+								onclick={() => handleTeamClick(match, match.teamARef)}
+								onmouseenter={() => (hoveredTeamId = teamASeed)}
+								onmouseleave={() => (hoveredTeamId = null)}
+								disabled={!canSelectTeam(match.teamARef, currentMatches)}
+								class={`team-row team-button ${isWinner(match, match.teamARef, currentMatches) ? 'team-row-winner' : ''} ${teamASeed !== null && teamASeed === hoveredTeamId ? 'team-row-highlighted' : ''}`}
+								use:registerTeamRow={`${match.game}-A`}
+							>
+								{#if teamASeed !== null}
+									<span class="team-seed">{teamASeed}</span>
+								{/if}
+								{#if teamAPlayers}
+									{#each teamAPlayers as player, i (player.id)}
+										{i > 0 ? ' / ' : ''}<span
+											class={pickedPlayerIdSet.has(player.id) ? 'picked-name' : ''}
+											title={pickedPlayerIdSet.has(player.id) ? 'Spieler in deinem Team' : undefined}
+											>{toBracketName(player)}</span
+										>
+									{/each}
+								{:else}
+									{getFallbackLabel(match.teamARef)}
+								{/if}
+							</button>
+							<button
+								type="button"
+								onclick={() => handleTeamClick(match, match.teamBRef)}
+								onmouseenter={() => (hoveredTeamId = teamBSeed)}
+								onmouseleave={() => (hoveredTeamId = null)}
+								disabled={!canSelectTeam(match.teamBRef, currentMatches)}
+								class={`team-row team-button ${isWinner(match, match.teamBRef, currentMatches) ? 'team-row-winner' : ''} ${teamBSeed !== null && teamBSeed === hoveredTeamId ? 'team-row-highlighted' : ''}`}
+								use:registerTeamRow={`${match.game}-B`}
+							>
+								{#if teamBSeed !== null}
+									<span class="team-seed">{teamBSeed}</span>
+								{/if}
+								{#if teamBPlayers}
+									{#each teamBPlayers as player, i (player.id)}
+										{i > 0 ? ' / ' : ''}<span
+											class={pickedPlayerIdSet.has(player.id) ? 'picked-name' : ''}
+											title={pickedPlayerIdSet.has(player.id) ? 'Spieler in deinem Team' : undefined}
+											>{toBracketName(player)}</span
+										>
+									{/each}
+								{:else}
+									{getFallbackLabel(match.teamBRef)}
+								{/if}
+							</button>
+						</div>
+					</div>
+				{/if}
+			{/snippet}
+
+			{#each activeLayout.columns as column}
+				<div class="bracket-column">
+					<h2 class="bracket-column-title">{column.title}</h2>
+					<div class="bracket-column-games">
+						{#each column.gameIds as group (Array.isArray(group) ? group.join('-') : group)}
+							{#if Array.isArray(group)}
+								<div class="match-group">
+									{#each group as gameId (gameId)}
+										{@render matchCard(gameId)}
+									{/each}
+								</div>
+							{:else}
+								{@render matchCard(group)}
+							{/if}
+						{/each}
+					</div>
 				</div>
 			{/each}
 		</div>
@@ -818,17 +977,57 @@
 	}
 
 	.bracket-grid {
+		position: relative;
+		isolation: isolate;
 		display: grid;
-		grid-template-columns: repeat(var(--bracket-columns), minmax(200px, 1fr));
+		width: max-content;
+		grid-template-columns: repeat(var(--bracket-columns), 152px);
+	}
+
+	.bracket-column {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+
+	.bracket-column-games {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		justify-content: space-evenly;
+		gap: 0.6rem;
+	}
+
+	.match-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.connector-lines {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		z-index: -1;
+		overflow: visible;
+		pointer-events: none;
+	}
+
+	.connector-lines path {
+		fill: none;
+		stroke: rgba(148, 163, 184, 0.6);
+		stroke-width: 2;
 	}
 
 	.bracket-column-title {
 		margin-bottom: 1rem;
-		font-size: 1.35rem;
+		font-size: 1rem;
 		font-weight: 900;
 		line-height: 1.05;
 		letter-spacing: -0.02em;
 		color: #f6f8fb;
+		text-align: center;
 	}
 
 	.match-wrap {
@@ -862,7 +1061,7 @@
 		border: 1px solid #d5d8cf;
 		background: #f0f0e5;
 		padding: 0.22rem 1.6rem 0.22rem 0.35rem;
-		font-size: 1.15rem;
+		font-size: 0.68rem;
 		line-height: 1.15;
 		color: #535b63;
 	}
@@ -913,29 +1112,10 @@
 		color: #a16207;
 	}
 
-	.connector {
-		position: absolute;
-		top: 50%;
-		transform: translateY(-50%);
-		font-size: 1.35rem;
-		line-height: 1;
-		color: rgba(243, 245, 247, 0.9);
-		text-shadow: 0 0 10px rgba(0, 0, 0, 0.35);
-	}
-
-	.connector-right {
-		right: -1.2rem;
-	}
-
-	.connector-left {
-		left: -1.2rem;
-	}
-
 	.final-wrap {
-		display: grid;
-		grid-template-columns: auto 1fr;
-		align-items: center;
-		gap: 0.55rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
 	}
 
 	.final-card {
@@ -946,6 +1126,7 @@
 	}
 
 	.final-icon {
+		align-self: center;
 		font-size: 1.5rem;
 		line-height: 1;
 		filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
@@ -953,29 +1134,25 @@
 
 	@media (max-width: 1280px) {
 		.bracket-column-title {
-			font-size: 1.1rem;
+			font-size: 0.9rem;
 		}
 
 		.team-row {
-			font-size: 1rem;
+			font-size: 0.62rem;
 		}
 	}
 
 	@media (max-width: 1024px) {
-		.connector {
-			display: none;
-		}
-
 		.bracket-grid {
-			gap: 0.75rem;
+			gap: 1.25rem;
 		}
 
 		.bracket-column-title {
-			font-size: 0.95rem;
+			font-size: 0.82rem;
 		}
 
 		.team-row {
-			font-size: 0.82rem;
+			font-size: 0.56rem;
 		}
 	}
 </style>

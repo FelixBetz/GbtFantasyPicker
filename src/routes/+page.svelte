@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import type { Player } from '$lib/player';
 	import TeamPlanner from '$lib/TeamPlanner.svelte';
 	import TournamentBracket from '$lib/TournamentBracket.svelte';
@@ -6,6 +7,22 @@
 	import { createSeedPlayers } from '../data/players.generated';
 
 	type ViewMode = 'team' | 'bracket-men' | 'bracket-women';
+	const VIEW_STORAGE_KEY = 'gbt-active-view';
+	const VALID_VIEW_MODES: ViewMode[] = ['team', 'bracket-men', 'bracket-women'];
+
+	function getInitialView(): ViewMode {
+		if (!browser) {
+			return 'team';
+		}
+
+		const stored = localStorage.getItem(VIEW_STORAGE_KEY);
+
+		if (VALID_VIEW_MODES.includes(stored as ViewMode)) {
+			return stored as ViewMode;
+		}
+
+		return 'team';
+	}
 	type PlayerStats = {
 		gamesPlayed: number;
 		wins: number;
@@ -15,7 +32,7 @@
 		stats: Record<number, PlayerStats>;
 	};
 
-	let activeView = $state<ViewMode>('bracket-women');
+	let activeView = $state<ViewMode>(getInitialView());
 	let bracketStatsByView = $state<{
 		men: Record<number, PlayerStats>;
 		women: Record<number, PlayerStats>;
@@ -28,6 +45,10 @@
 
 	function handleViewChange(nextMode: ViewMode) {
 		activeView = nextMode;
+
+		if (browser) {
+			localStorage.setItem(VIEW_STORAGE_KEY, nextMode);
+		}
 	}
 
 	function areStatsEqual(a: Record<number, PlayerStats>, b: Record<number, PlayerStats>): boolean {

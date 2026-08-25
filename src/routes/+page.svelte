@@ -99,10 +99,14 @@
 
 <ViewModeSwitch {activeView} onChange={handleViewChange} />
 
-{#if activeView === 'team'}
+<div class={activeView === 'team' ? '' : 'hidden'}>
 	<TeamPlanner {players} {playerStatsById} />
-{:else if activeView === 'bracket-men'}
-	<TournamentBracket {players} lockedBracket="men" onStatsChange={handleBracketStatsChange} />
-{:else}
-	<TournamentBracket {players} lockedBracket="women" onStatsChange={handleBracketStatsChange} />
-{/if}
+</div>
+
+<div class={activeView === 'team' ? 'hidden' : ''}>
+	<TournamentBracket
+		{players}
+		lockedBracket={activeView === 'bracket-men' ? 'men' : activeView === 'bracket-women' ? 'women' : null}
+		onStatsChange={handleBracketStatsChange}
+	/>
+</div>

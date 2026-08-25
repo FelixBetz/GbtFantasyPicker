@@ -656,7 +656,7 @@
 	const currentTeams = $derived(activeBracket === 'men' ? menTeams : womenTeams);
 </script>
 
-<section class="mx-auto mt-8 max-w-[1600px] px-3 py-5 lg:px-4">
+<section class="mt-8 w-full px-3 py-5 lg:px-4">
 	<header
 		class="mb-4 rounded-2xl border border-slate-700/60 bg-slate-900/80 p-3 text-slate-100 shadow-xl"
 	>

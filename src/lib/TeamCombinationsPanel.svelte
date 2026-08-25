@@ -141,16 +141,19 @@
 	</div>
 
 	{#if topPlayersByGender}
-		<div class="mb-4 grid grid-cols-2 gap-3">
+		<div class="mb-4 space-y-3">
 			<div class="rounded-lg border border-amber-100 bg-amber-50/60 p-3">
 				<h4 class="mb-2 text-xs font-bold uppercase tracking-wide text-stone-600">
 					Top 5 Frauen
 				</h4>
-				<ol class="space-y-1">
-					{#each topPlayersByGender.women as entry (entry.player.id)}
-						<li class="flex items-center justify-between gap-2 text-sm text-stone-700">
-							<span class="truncate">{entry.player.firstName} {entry.player.lastName}</span>
-							<span class="shrink-0 font-semibold text-amber-900"
+				<ol class="space-y-1.5">
+					{#each topPlayersByGender.women as entry, index (entry.player.id)}
+						<li class="flex items-center gap-2 text-sm text-stone-700">
+							<span class="w-4 shrink-0 text-xs font-semibold text-stone-400">{index + 1}.</span>
+							<span class="min-w-0 flex-1 break-words"
+								>{entry.player.firstName} {entry.player.lastName}</span
+							>
+							<span class="shrink-0 whitespace-nowrap font-semibold text-amber-900"
 								>{entry.count}x · {entry.gamesPlayed} Sp.</span
 							>
 						</li>
@@ -161,11 +164,14 @@
 				<h4 class="mb-2 text-xs font-bold uppercase tracking-wide text-stone-600">
 					Top 5 Männer
 				</h4>
-				<ol class="space-y-1">
-					{#each topPlayersByGender.men as entry (entry.player.id)}
-						<li class="flex items-center justify-between gap-2 text-sm text-stone-700">
-							<span class="truncate">{entry.player.firstName} {entry.player.lastName}</span>
-							<span class="shrink-0 font-semibold text-amber-900"
+				<ol class="space-y-1.5">
+					{#each topPlayersByGender.men as entry, index (entry.player.id)}
+						<li class="flex items-center gap-2 text-sm text-stone-700">
+							<span class="w-4 shrink-0 text-xs font-semibold text-stone-400">{index + 1}.</span>
+							<span class="min-w-0 flex-1 break-words"
+								>{entry.player.firstName} {entry.player.lastName}</span
+							>
+							<span class="shrink-0 whitespace-nowrap font-semibold text-amber-900"
 								>{entry.count}x · {entry.gamesPlayed} Sp.</span
 							>
 						</li>

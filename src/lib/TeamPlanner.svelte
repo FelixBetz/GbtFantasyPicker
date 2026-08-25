@@ -362,7 +362,9 @@
 			players: players.filter((player) => !excludedIds.has(player.id)),
 			currentTeam: team,
 			budget: COINS_BUDGET,
-			maxTeamSize: MAX_TEAM_SIZE
+			maxTeamSize: MAX_TEAM_SIZE,
+			maxRemainingBudget: MAX_COMBO_REMAINING_BUDGET,
+			maxGenderDifference
 		});
 	}
 </script>

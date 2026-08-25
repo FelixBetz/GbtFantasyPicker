@@ -33,6 +33,7 @@
 	};
 
 	let activeView = $state<ViewMode>(getInitialView());
+	let pickedPlayerIds = $state<number[]>([]);
 	let bracketStatsByView = $state<{
 		men: Record<number, PlayerStats>;
 		women: Record<number, PlayerStats>;
@@ -100,12 +101,17 @@
 <ViewModeSwitch {activeView} onChange={handleViewChange} />
 
 <div class={activeView === 'team' ? '' : 'hidden'}>
-	<TeamPlanner {players} {playerStatsById} />
+	<TeamPlanner
+		{players}
+		{playerStatsById}
+		onTeamChange={(ids) => (pickedPlayerIds = ids)}
+	/>
 </div>
 
 <div class={activeView === 'team' ? 'hidden' : ''}>
 	<TournamentBracket
 		{players}
+		{pickedPlayerIds}
 		lockedBracket={activeView === 'bracket-men' ? 'men' : activeView === 'bracket-women' ? 'women' : null}
 		onStatsChange={handleBracketStatsChange}
 	/>

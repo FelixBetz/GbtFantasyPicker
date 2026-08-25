@@ -61,10 +61,18 @@
 	type TournamentBracketProps = {
 		players: Player[];
 		lockedBracket?: BracketKind | null;
+		pickedPlayerIds?: number[];
 		onStatsChange?: (payload: BracketStatsPayload) => void;
 	};
 
-	let { players, lockedBracket = null, onStatsChange }: TournamentBracketProps = $props();
+	let {
+		players,
+		lockedBracket = null,
+		pickedPlayerIds = [],
+		onStatsChange
+	}: TournamentBracketProps = $props();
+
+	const pickedPlayerIdSet = $derived(new Set(pickedPlayerIds));
 
 	const BRACKET_LAYOUTS: Record<BracketVariant, BracketLayout> = {
 		tourstop: {
@@ -371,22 +379,24 @@
 		return 'Team TBD';
 	}
 
-	function getSlotLabel(ref: TeamRef, matches: MatchState[], teams: TeamEntry[]): string {
-		const teamId = resolveTeamId(ref, matches);
-		const team = getTeamById(teams, teamId);
-
-		if (team) {
-			return team.label;
-		}
-
-		return getFallbackLabel(ref);
-	}
-
 	function getSlotSeed(ref: TeamRef, matches: MatchState[], teams: TeamEntry[]): number | null {
 		const teamId = resolveTeamId(ref, matches);
 		const team = getTeamById(teams, teamId);
 
 		return team ? team.id : null;
+	}
+
+	function getSlotPlayers(ref: TeamRef, matches: MatchState[], teams: TeamEntry[]): Player[] | null {
+		const teamId = resolveTeamId(ref, matches);
+		const team = getTeamById(teams, teamId);
+
+		if (!team) {
+			return null;
+		}
+
+		return team.playerIds
+			.map((playerId) => players.find((candidate) => candidate.id === playerId))
+			.filter((player): player is Player => player !== undefined);
 	}
 
 	function normalizeWinners(matches: MatchState[]): MatchState[] {
@@ -721,6 +731,8 @@
 						{#if match}
 							{@const teamASeed = getSlotSeed(match.teamARef, currentMatches, currentTeams)}
 							{@const teamBSeed = getSlotSeed(match.teamBRef, currentMatches, currentTeams)}
+							{@const teamAPlayers = getSlotPlayers(match.teamARef, currentMatches, currentTeams)}
+							{@const teamBPlayers = getSlotPlayers(match.teamBRef, currentMatches, currentTeams)}
 							<div class={`match-wrap ${column.matchWrapClasses?.[index] ?? ''} ${match.isFinal ? 'final-wrap' : ''}`}>
 								{#if match.isFinal}
 									<div class="final-icon">🏆</div>
@@ -746,7 +758,17 @@
 										{#if teamASeed !== null}
 											<span class="team-seed">{teamASeed}</span>
 										{/if}
-										{getSlotLabel(match.teamARef, currentMatches, currentTeams)}
+										{#if teamAPlayers}
+											{#each teamAPlayers as player, i (player.id)}
+												{i > 0 ? ' / ' : ''}<span
+													class={pickedPlayerIdSet.has(player.id) ? 'picked-name' : ''}
+													title={pickedPlayerIdSet.has(player.id) ? 'Spieler in deinem Team' : undefined}
+													>{toBracketName(player)}</span
+												>
+											{/each}
+										{:else}
+											{getFallbackLabel(match.teamARef)}
+										{/if}
 									</button>
 									<button
 										type="button"
@@ -759,7 +781,17 @@
 										{#if teamBSeed !== null}
 											<span class="team-seed">{teamBSeed}</span>
 										{/if}
-										{getSlotLabel(match.teamBRef, currentMatches, currentTeams)}
+										{#if teamBPlayers}
+											{#each teamBPlayers as player, i (player.id)}
+												{i > 0 ? ' / ' : ''}<span
+													class={pickedPlayerIdSet.has(player.id) ? 'picked-name' : ''}
+													title={pickedPlayerIdSet.has(player.id) ? 'Spieler in deinem Team' : undefined}
+													>{toBracketName(player)}</span
+												>
+											{/each}
+										{:else}
+											{getFallbackLabel(match.teamBRef)}
+										{/if}
 									</button>
 									<span class={`connector ${column.title.includes('Loser') ? 'connector-left' : 'connector-right'}`}>
 										{column.title.includes('Loser') ? '←' : '→'}
@@ -874,6 +906,11 @@
 		border-color: #e11d48;
 		background: #ffe1e6;
 		box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.55);
+	}
+
+	.picked-name {
+		font-weight: 800;
+		color: #a16207;
 	}
 
 	.connector {

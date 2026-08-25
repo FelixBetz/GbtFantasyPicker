@@ -9,6 +9,7 @@
 	type TeamPlannerProps = {
 		players: Player[];
 		playerStatsById: Record<number, { gamesPlayed: number; wins: number }>;
+		onTeamChange?: (playerIds: number[]) => void;
 	};
 
 	export type PlayerFrequency = {
@@ -18,7 +19,7 @@
 		score: number;
 	};
 
-	let { players, playerStatsById }: TeamPlannerProps = $props();
+	let { players, playerStatsById, onTeamChange }: TeamPlannerProps = $props();
 
 	const COINS_BUDGET = 150;
 	const MAX_TEAM_SIZE = 6;
@@ -281,6 +282,10 @@
 		}
 
 		localStorage.setItem(TEAM_STORAGE_KEY, JSON.stringify(team.map((player) => player.id)));
+	});
+
+	$effect(() => {
+		onTeamChange?.(team.map((player) => player.id));
 	});
 
 	$effect(() => {

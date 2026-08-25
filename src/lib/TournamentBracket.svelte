@@ -382,6 +382,13 @@
 		return getFallbackLabel(ref);
 	}
 
+	function getSlotSeed(ref: TeamRef, matches: MatchState[], teams: TeamEntry[]): number | null {
+		const teamId = resolveTeamId(ref, matches);
+		const team = getTeamById(teams, teamId);
+
+		return team ? team.id : null;
+	}
+
 	function normalizeWinners(matches: MatchState[]): MatchState[] {
 		const normalized = matches.map((match) => ({ ...match }));
 
@@ -731,6 +738,9 @@
 										disabled={!canSelectTeam(match.teamARef, currentMatches)}
 										class={`team-row team-button ${isWinner(match, match.teamARef, currentMatches) ? 'team-row-winner' : ''}`}
 									>
+										{#if getSlotSeed(match.teamARef, currentMatches, currentTeams) !== null}
+											<span class="team-seed">{getSlotSeed(match.teamARef, currentMatches, currentTeams)}</span>
+										{/if}
 										{getSlotLabel(match.teamARef, currentMatches, currentTeams)}
 									</button>
 									<button
@@ -739,6 +749,9 @@
 										disabled={!canSelectTeam(match.teamBRef, currentMatches)}
 										class={`team-row team-button ${isWinner(match, match.teamBRef, currentMatches) ? 'team-row-winner' : ''}`}
 									>
+										{#if getSlotSeed(match.teamBRef, currentMatches, currentTeams) !== null}
+											<span class="team-seed">{getSlotSeed(match.teamBRef, currentMatches, currentTeams)}</span>
+										{/if}
 										{getSlotLabel(match.teamBRef, currentMatches, currentTeams)}
 									</button>
 									<span class={`connector ${column.title.includes('Loser') ? 'connector-left' : 'connector-right'}`}>
@@ -804,14 +817,25 @@
 	}
 
 	.team-row {
+		position: relative;
 		margin: 0.25rem;
 		border-radius: 0.3rem;
 		border: 1px solid #d5d8cf;
 		background: #f0f0e5;
-		padding: 0.22rem 0.35rem;
+		padding: 0.22rem 1.6rem 0.22rem 0.35rem;
 		font-size: 1.15rem;
 		line-height: 1.15;
 		color: #535b63;
+	}
+
+	.team-seed {
+		position: absolute;
+		top: 0.15rem;
+		right: 0.25rem;
+		font-size: 0.68rem;
+		font-weight: 700;
+		line-height: 1;
+		color: #8a929a;
 	}
 
 	.team-button {

@@ -265,7 +265,9 @@
 			.filter((entry): entry is PlayerFrequency => entry !== null);
 
 		const rankedByGender = (gender: Gender) =>
-			frequencies.filter((entry) => entry.player.gender === gender).sort((a, b) => b.score - a.score);
+			frequencies
+				.filter((entry) => entry.player.gender === gender && entry.count > 0)
+				.sort((a, b) => b.score - a.score);
 
 		return {
 			women: rankedByGender(Gender.Female),

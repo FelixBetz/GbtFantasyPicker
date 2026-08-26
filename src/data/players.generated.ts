@@ -2,12 +2,10 @@ import { Gender, Player } from '$lib/player';
 
 export const dvvWomenListUrl = 'https://beach.volleyball-verband.de/public/tur-sl.php?id=14642';
 export const dvvMenListUrl = 'https://beach.volleyball-verband.de/public/tur-sl.php?id=14643';
-export const dvvExtractedAt = '2026-08-25T10:54:32.808Z';
+export const dvvExtractedAt = '2026-08-26T19:31:54.537Z';
 
 export function createSeedPlayers(): Player[] {
 	return [
-		new Player(Gender.Female, 'Svenja', 'Müller', 45, 57433, 46710),
-		new Player(Gender.Female, 'Cinja', 'Tillmann', 50, 53413, 46710),
 		new Player(Gender.Female, 'Sandra', 'Ittlinger', 45, 52499, 34836),
 		new Player(Gender.Female, 'Kim', 'van de Velde', 40, 53725, 34836),
 		new Player(Gender.Female, 'Linda', 'Bock', 40, 56613, 59903),
@@ -38,6 +36,8 @@ export function createSeedPlayers(): Player[] {
 		new Player(Gender.Female, 'Louisa', 'Marunde', 5, 58545, 56180),
 		new Player(Gender.Female, 'Nina', 'Interwies', 5, 52570, 64370),
 		new Player(Gender.Female, 'Nele', 'Schmitt', 5, 57771, 64370),
+		new Player(Gender.Female, 'Geeske', 'Camp', 5, 62108, 70478),
+		new Player(Gender.Female, 'Ida', 'Kaminski', 5, 59931, 70478),
 		new Player(Gender.Male, 'Nils', 'Ehlers', 50, 55957, 68489),
 		new Player(Gender.Male, 'Lui', 'Wüst', 40, 59402, 68489),
 		new Player(Gender.Male, 'Paul', 'Henning', 40, 55268, 65873),
